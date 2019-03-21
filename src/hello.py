@@ -22,19 +22,19 @@
 #python
 import sys
 import os, os.path
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import subprocess as sb
 import mimetypes
 
 
 #gtk
-import pygtk
-pygtk.require('2.0')
-import gtk, gtk.glade
-import pango
-import gtksourceview2 as sv
-
-
+import gi
+gi.require_version('Pango', '1.0') 
+gi.require_version('Gtk', '3.0')
+gi.require_version('GdkPixbuf', '2.0')
+gi.require_version('GtkSource', '3.0')     
+from gi.repository import GLib, GObject, Pango, GdkPixbuf, Gtk, Gdk
+from gi.repository import GtkSource as sv
 
 
 from widgets import FileBrowserTV, SidePaneBrowser, BottomPane, TabWidget, LeftSidePane, PythonSourcePlugin, WC, BracketCompletionViewHelper
@@ -45,7 +45,7 @@ from gregextoolkitdialog import RegexToolkit
 #FIXME: language mapping.
 def guess_file_type(filepath):
     t=mimetypes.guess_type(filepath)
-    print "T:", t
+    print("T:", t)
     s=t[0]
     if "cs" in s:
         return "c-sharp"
@@ -66,61 +66,62 @@ class MainWindow(object):
         self.closequotesbraces=False
         #self.symbmapping={"(":")", "{":"}", "[":"]", "'":"'", "\"":"\""} 
         #Widget tree..
-        self.wTree=gtk.glade.XML(os.path.join(os.path.dirname(__file__), 'ui', 'hello.glade'))
+        self.wTree=Gtk.Builder()
+        self.wTree.add_from_file(os.path.join(os.path.dirname(__file__), 'ui', 'hello.ui'))
 
         #connect signals and handlers.
-        self.wTree.signal_autoconnect(self)
+        self.wTree.connect_signals(self)
 
-        self._window1=self.wTree.get_widget('window1')
-        self._table1=self.wTree.get_widget('table1')
-        self._menubar1=self.wTree.get_widget('menubar1')
-        self._menuitemfile=self.wTree.get_widget('menuitemfile')
-        self._menu1=self.wTree.get_widget('menu1')
-        self._menuitemnew=self.wTree.get_widget('menuitemnew')
-        self._menuitemopen=self.wTree.get_widget('menuitemopen')
-        self._menuitemsave=self.wTree.get_widget('menuitemsave')
-        self._menuitemsaveas=self.wTree.get_widget('menuitemsaveas')
-        self._separatormenuitem1=self.wTree.get_widget('separatormenuitem1')
-        self._menuitemquit=self.wTree.get_widget('menuitemquit')
-        self._menuitemedit=self.wTree.get_widget('menuitemedit')
-        self._menu2=self.wTree.get_widget('menu2')
-        self._menuitemcut=self.wTree.get_widget('menuitemcut')
-        self._menuitemcopy=self.wTree.get_widget('menuitemcopy')
-        self._menuitempaste=self.wTree.get_widget('menuitempaste')
-        self._menuitemview=self.wTree.get_widget('menuitemview')
-        self._menuiteabout=self.wTree.get_widget('menuiteabout')
-        self._menu3=self.wTree.get_widget('menu3')
-        self._menuitemabout=self.wTree.get_widget('menuitemabout')
-        self._menuitemlanguage=self.wTree.get_widget('menuitemlanguage')
+        self._window1=self.wTree.get_object('window1')
+        self._table1=self.wTree.get_object('table1')
+        self._menubar1=self.wTree.get_object('menubar1')
+        self._menuitemfile=self.wTree.get_object('menuitemfile')
+        self._menu1=self.wTree.get_object('menu1')
+        self._menuitemnew=self.wTree.get_object('menuitemnew')
+        self._menuitemopen=self.wTree.get_object('menuitemopen')
+        self._menuitemsave=self.wTree.get_object('menuitemsave')
+        self._menuitemsaveas=self.wTree.get_object('menuitemsaveas')
+        self._separatormenuitem1=self.wTree.get_object('separatormenuitem1')
+        self._menuitemquit=self.wTree.get_object('menuitemquit')
+        self._menuitemedit=self.wTree.get_object('menuitemedit')
+        self._menu2=self.wTree.get_object('menu2')
+        self._menuitemcut=self.wTree.get_object('menuitemcut')
+        self._menuitemcopy=self.wTree.get_object('menuitemcopy')
+        self._menuitempaste=self.wTree.get_object('menuitempaste')
+        self._menuitemview=self.wTree.get_object('menuitemview')
+        self._menuiteabout=self.wTree.get_object('menuiteabout')
+        self._menu3=self.wTree.get_object('menu3')
+        self._menuitemabout=self.wTree.get_object('menuitemabout')
+        self._menuitemlanguage=self.wTree.get_object('menuitemlanguage')
         
-        self._menuitemfindreplace=self.wTree.get_widget('menuitemfindreplace')
-        self._dialogfindreplace=self.wTree.get_widget('dialogfindreplace')
-        self._dfrentrysearch=self.wTree.get_widget('entrysearch')
-        self._dfrentryreplace=self.wTree.get_widget('entryreplace')
+        self._menuitemfindreplace=self.wTree.get_object('menuitemfindreplace')
+        self._dialogfindreplace=self.wTree.get_object('dialogfindreplace')
+        self._dfrentrysearch=self.wTree.get_object('entrysearch')
+        self._dfrentryreplace=self.wTree.get_object('entryreplace')
         #self._dialogfindreplace.connect("close", self.on_dialogfindreplace_close)
         #self._dialogfindreplace.connect("response", self.on_dialogfindreplace_response)
         self._dialogfindreplace.connect("delete-event", self.on_dialogfindreplace_delete_event)
         
-        self._dialogwc=self.wTree.get_widget('dialogwc')
-        self.lblgwcrange=self.wTree.get_widget('lblgwcrange')
-        self.lblgwclines=self.wTree.get_widget('lblgwclines')
-        self.lblgwcwords=self.wTree.get_widget('lblgwcwords')
-        self.lblgwcchars=self.wTree.get_widget('lblgwcchars')
-        self.lblgwccharsnospaces=self.wTree.get_widget('lblgwccharsnospaces')
+        self._dialogwc=self.wTree.get_object('dialogwc')
+        self.lblgwcrange=self.wTree.get_object('lblgwcrange')
+        self.lblgwclines=self.wTree.get_object('lblgwclines')
+        self.lblgwcwords=self.wTree.get_object('lblgwcwords')
+        self.lblgwcchars=self.wTree.get_object('lblgwcchars')
+        self.lblgwccharsnospaces=self.wTree.get_object('lblgwccharsnospaces')
         
         self.wc=WC() #wordcounter service
         
         
-        self.dialoggotoline=self.wTree.get_widget('dialoggotoline')
-        self.entrygotoline=self.wTree.get_widget('entrygotoline')
+        self.dialoggotoline=self.wTree.get_object('dialoggotoline')
+        self.entrygotoline=self.wTree.get_object('entrygotoline')
         
-        self._maintoolbar=self.wTree.get_widget("maintoolbar")
-        self._statusbar=self.wTree.get_widget('statusbar')
-        self._scrolledwindoweditor=gtk.ScrolledWindow()
-        self._scrolledwindoweditor.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self._hpaned1=self.wTree.get_widget('hpaned1')
-        self._vpaned1=self.wTree.get_widget('vpaned1')
-        self._tvpath=self.wTree.get_widget('tvpath')
+        self._maintoolbar=self.wTree.get_object("maintoolbar")
+        self._statusbar=self.wTree.get_object('statusbar')
+        self._scrolledwindoweditor=Gtk.ScrolledWindow()
+        self._scrolledwindoweditor.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self._hpaned1=self.wTree.get_object('hpaned1')
+        self._vpaned1=self.wTree.get_object('vpaned1')
+        self._tvpath=self.wTree.get_object('tvpath')
         
         
         self._languagemanager=sv.LanguageManager()
@@ -132,10 +133,10 @@ class MainWindow(object):
         self._window1.connect("destroy", self.on_window1_destroy)
         
         #DRAG AND DROP
-        self._window1.connect('drag_data_received', self. on_drag_data_received)
-        self._window1.drag_dest_set( gtk.DEST_DEFAULT_MOTION |
-                  gtk.DEST_DEFAULT_HIGHLIGHT | gtk.DEST_DEFAULT_DROP,
-                  dnd_list, gtk.gdk.ACTION_COPY)
+        # self._window1.connect('drag_data_received', self. on_drag_data_received)
+        # self._window1.drag_dest_set( Gtk.DestDefaults.MOTION |
+        #           Gtk.DestDefaults.HIGHLIGHT | Gtk.DestDefaults.DROP,
+        #           dnd_list, Gdk.DragAction.COPY)
         
         self._filename="" #current file.
         self._dirty=False #changed?
@@ -154,11 +155,11 @@ class MainWindow(object):
         
         if target_type == TARGET_TYPE_URI_LIST:
             uri = selection.data.strip('\r\n\x00')
-            print 'uri', uri
+            print('uri', uri)
             uri_splitted = uri.split() # we may have more than one file dropped
             for uri in uri_splitted:
                 path = self.get_file_path_from_dnd_dropped_uri(uri)
-                print 'path to open', path
+                print('path to open', path)
                 if os.path.isfile(path): # is it file?
                     self.forkme(path)
             
@@ -173,7 +174,7 @@ class MainWindow(object):
         elif uri.startswith('file:'): # xffm
             path = uri[5:] # 5 is len('file:')
         
-        path = urllib.url2pathname(path) # escape special chars
+        path = urllib.request.url2pathname(path) # escape special chars
         path = path.strip('\r\n\x00') # remove \r\n and NULL
         
         return path
@@ -184,13 +185,13 @@ class MainWindow(object):
         return False
         
     def on_window1_destroy(self, widget, data=None):
-        gtk.main_quit()
+        Gtk.main_quit()
     
     def on_menuitemfindreplace_activate(self, dialog, *args):
         self._dialogfindreplace.show_all()
         
         #resp=self._dialogfindreplace.run()
-        #if resp in [gtk.RESPONSE_CLOSE, gtk.RESPONSE_DELETE_EVENT]:
+        #if resp in [Gtk.ResponseType.CLOSE, Gtk.ResponseType.DELETE_EVENT]:
             #self._dialogfindreplace.response(resp) #hide_all()
             
         #self._dialogfindreplace.show_all()
@@ -200,13 +201,13 @@ class MainWindow(object):
     
     #def on_dialogfindreplace_response(self, dialog, respid):
         #print "RESPID: ", respid
-        #if respid in [gtk.RESPONSE_CLOSE, gtk.RESPONSE_DELETE_EVENT]:
+        #if respid in [Gtk.ResponseType.CLOSE, Gtk.ResponseType.DELETE_EVENT]:
         #    dialog.hide_all()
         #return respid
         ##else:
         ##    return respid
         
-        ##if resp in [gtk.RESPONSE_OK, gtk.RESPONSE_CLOSE, gtk.RESPONSE_DELETE_EVENT]:
+        ##if resp in [Gtk.ResponseType.OK, Gtk.ResponseType.CLOSE, Gtk.ResponseType.DELETE_EVENT]:
         ##    print "OK_CLOSE_DELETE"
         ##    buf=self._sv.get_buffer()
         ##    if buf.get_tag_table().lookup("search_results"):
@@ -214,7 +215,7 @@ class MainWindow(object):
             ##self._dialogfindreplace.destroy()
         
         ##res=self._dialogwc.run()
-        ##if res in [gtk.RESPONSE_OK, gtk.RESPONSE_CLOSE, gtk.RESPONSE_DELETE_EVENT]:
+        ##if res in [Gtk.ResponseType.OK, Gtk.ResponseType.CLOSE, Gtk.ResponseType.DELETE_EVENT]:
         ##    self._dialogwc.hide()
 
     def on_dialogfindreplace_delete_event(self, widget, *args):
@@ -234,26 +235,26 @@ class MainWindow(object):
         
     def _prepare_toolbar(self):
         
-        newtbitem=gtk.ToolButton("gtk-new")
+        newtbitem=Gtk.ToolButton("gtk-new")
         newtbitem.connect("clicked", self.on_menuitemnew_activate)
         
-        opentbitem=gtk.ToolButton("gtk-open")
+        opentbitem=Gtk.ToolButton("gtk-open")
         opentbitem.connect("clicked", self.on_menuitemopen_activate)
         
-        savetbitem=gtk.ToolButton("gtk-save")
+        savetbitem=Gtk.ToolButton("gtk-save")
         savetbitem.connect("clicked", self.on_menuitemsave_activate)
         
-        saveastbitem=gtk.ToolButton("gtk-save-as")
+        saveastbitem=Gtk.ToolButton("gtk-save-as")
         saveastbitem.connect("clicked", self.on_menuitemsaveas_activate)
                 
-        reverttbitem=gtk.ToolButton("gtk-revert-to-saved")
+        reverttbitem=Gtk.ToolButton("gtk-revert-to-saved")
         reverttbitem.connect("clicked", self._on_revert)
         
-        colorchoosertbitem=gtk.ToolButton("gtk-select-color")
+        colorchoosertbitem=Gtk.ToolButton("gtk-select-color")
         colorchoosertbitem.connect("clicked", self._on_choose_color)
         
-        tbitems=[newtbitem, opentbitem, savetbitem, saveastbitem, gtk.SeparatorToolItem(), \
-        reverttbitem, gtk.SeparatorToolItem(), colorchoosertbitem]
+        tbitems=[newtbitem, opentbitem, savetbitem, saveastbitem, Gtk.SeparatorToolItem(), \
+        reverttbitem, Gtk.SeparatorToolItem(), colorchoosertbitem]
         
         for i, tbitem in enumerate(tbitems):
             self._maintoolbar.insert(tbitem, i)
@@ -261,9 +262,9 @@ class MainWindow(object):
         #self._maintoolbar.insert(opentbitem, 1)
         #self._maintoolbar.insert(savetbitem, 2)
         #self._maintoolbar.insert(saveastbitem, 3)
-        #self._maintoolbar.insert(gtk.SeparatorToolItem(), 4)
+        #self._maintoolbar.insert(Gtk.SeparatorToolItem(), 4)
         #self._maintoolbar.insert(reverttbitem, 5)
-        #self._maintoolbar.insert(gtk.SeparatorToolItem(), 6)
+        #self._maintoolbar.insert(Gtk.SeparatorToolItem(), 6)
         #self._maintoolbar.insert(colorchoosertbitem, 7)
     
     def _on_revert(self, widget, *args):
@@ -271,10 +272,10 @@ class MainWindow(object):
             self.set_current_file(self._filename)
         
     def _on_choose_color(self, widget, *args):
-        cdia = gtk.ColorSelectionDialog("Select color")
+        cdia = Gtk.ColorSelectionDialog("Select color")
         
         resp = cdia.run()
-        if resp == gtk.RESPONSE_OK:
+        if resp == Gtk.ResponseType.OK:
             colorsel = cdia.colorsel
             color = colorsel.get_current_color()
             self._sv.get_buffer().insert_at_cursor(color.to_string())
@@ -283,8 +284,8 @@ class MainWindow(object):
 
         
     def _prep_languages(self):
-        langsmenu=gtk.Menu()
-        adarmitem=gtk.RadioMenuItem(None, "ada")
+        langsmenu=Gtk.Menu()
+        adarmitem=Gtk.RadioMenuItem(None, "ada")
         adarmitem.connect("toggled", self._on_languagepicked, "ada")
         langsmenu.append(adarmitem)
         langs_ids=self._languagemanager.get_language_ids()
@@ -294,10 +295,10 @@ class MainWindow(object):
             if lang=="ada": 
                 continue
             else:
-                mitem=gtk.RadioMenuItem(adarmitem, lang)
+                mitem=Gtk.RadioMenuItem(adarmitem, lang)
                 mitem.connect("toggled", self._on_languagepicked, lang)
                 langsmenu.append(mitem)
-        self._menuitemlanguage.set_submenu(langsmenu)
+        # self._menuitemlanguage.set_submenu(langsmenu)
 
         
     def _on_languagepicked(self, widget, langname) :#*args):
@@ -343,8 +344,8 @@ class MainWindow(object):
                     self.leftsidetabs.sourceviewer.set_language(self.langplugin)
                 self._set_highlight_lang(lang)
                 
-            except Exception, ex:
-                print ex
+            except Exception as ex:
+                print(ex)
             
             finally:
                 if f:
@@ -374,12 +375,12 @@ class MainWindow(object):
                 
     def on_menuitemchangefont_activate(self, widget, *args):
         
-        fdia = gtk.FontSelectionDialog("Select font")
+        fdia = Gtk.FontSelectionDialog("Select font")
         response = fdia.run()
               
-        if response == gtk.RESPONSE_OK:
-            print "Font selected: "+fdia.get_font_name()
-            font_desc = pango.FontDescription(fdia.get_font_name())
+        if response == Gtk.ResponseType.OK:
+            print("Font selected: "+fdia.get_font_name())
+            font_desc = Pango.FontDescription(fdia.get_font_name())
             if font_desc:
                 self._sv.modify_font(font_desc)
         
@@ -409,23 +410,23 @@ class MainWindow(object):
         return self.get_text_from_buffer(self._sv.get_buffer())
     
     def yesnomsg(self, msg="Save"):
-        md = gtk.MessageDialog(self._window1,
-            gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
-            gtk.BUTTONS_YES_NO, msg)
+        md = Gtk.MessageDialog(self._window1,
+            Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION, 
+            Gtk.ButtonsType.YES_NO, msg)
         resp=md.run()
         md.destroy()
         
-        if resp == gtk.RESPONSE_YES:
+        if resp == Gtk.ResponseType.YES:
             return True
         else:
             return False
     
     def on_menuitemregextoolkit_activate(self, widget, *args):
         rtd=RegexToolkit().get_dialog()
-        #rtd.set_default_response(gtk.RESPONSE_OK)
+        #rtd.set_default_response(Gtk.ResponseType.OK)
         res=rtd.run()
-        print res.real
-        if res in [gtk.RESPONSE_CLOSE, gtk.RESPONSE_DELETE_EVENT]:
+        print(res.real)
+        if res in [Gtk.ResponseType.CLOSE, Gtk.ResponseType.DELETE_EVENT]:
             rtd.hide()
         #rtd.destroy()
         
@@ -438,16 +439,16 @@ class MainWindow(object):
         self.lblgwccharsnospaces.set_label(str(self.wc.ncharsnospaces()))
 
         res=self._dialogwc.run()
-        if res in [gtk.RESPONSE_OK, gtk.RESPONSE_CLOSE, gtk.RESPONSE_DELETE_EVENT]:
+        if res in [Gtk.ResponseType.OK, Gtk.ResponseType.CLOSE, Gtk.ResponseType.DELETE_EVENT]:
             self._dialogwc.hide()
     
     def on_menuitemgotoline_activate(self, widget, *args):
         res=self.dialoggotoline.run()
-        #if res==gtk.RESPONSE_OK or gtk.RESPONSE_CLOSE:
+        #if res==Gtk.ResponseType.OK or Gtk.ResponseType.CLOSE:
         #    self.dialoggotoline.hide()
         
         #print res.real
-        if res in [gtk.RESPONSE_OK, gtk.RESPONSE_CLOSE, gtk.RESPONSE_DELETE_EVENT]:
+        if res in [Gtk.ResponseType.OK, Gtk.ResponseType.CLOSE, Gtk.ResponseType.DELETE_EVENT]:
             self.dialoggotoline.hide()
         
     def on_btngotoline_clicked(self, widget, *args):
@@ -469,15 +470,15 @@ class MainWindow(object):
             
     def get_saveas_filename(self):
         f=None
-        sel = gtk.FileChooserDialog("Save as", self._window1,
-                            gtk.FILE_CHOOSER_ACTION_SAVE,
-                            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                            gtk.STOCK_OPEN, gtk.RESPONSE_OK)) 
+        sel = Gtk.FileChooserDialog("Save as", self._window1,
+                            Gtk.FileChooserAction.SAVE,
+                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                            Gtk.STOCK_OPEN, Gtk.ResponseType.OK)) 
 
-        sel.set_default_response(gtk.RESPONSE_OK)
+        sel.set_default_response(Gtk.ResponseType.OK)
         res=sel.run()
         
-        if res==gtk.RESPONSE_OK:
+        if res==Gtk.ResponseType.OK:
             f=sel.get_filename()
         sel.destroy()
         
@@ -494,7 +495,7 @@ class MainWindow(object):
         try:
             f=file(filename, "w")
             f.write(self.buftext())
-            print "saved to: ", filename
+            print("saved to: ", filename)
             self._dirty=False
         finally:
             if f is not None:
@@ -517,17 +518,17 @@ class MainWindow(object):
         
     def open_file(self):
         f=None
-        sel = gtk.FileChooserDialog("Select File",
+        sel = Gtk.FileChooserDialog("Select File",
                                     self._window1,
-                                    gtk.FILE_CHOOSER_ACTION_OPEN,
-                                     (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                        gtk.STOCK_OPEN, gtk.RESPONSE_OK)
+                                    Gtk.FileChooserAction.OPEN,
+                                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
                                      )
 
-        sel.set_default_response(gtk.RESPONSE_OK)
+        sel.set_default_response(Gtk.ResponseType.OK)
 
         res=sel.run()
-        if res==gtk.RESPONSE_OK:
+        if res==Gtk.ResponseType.OK:
             f=sel.get_filename()
 
         sel.destroy()
@@ -564,7 +565,7 @@ class MainWindow(object):
         
     def on_menuitemquit_activate(self, widget, *args):
         self.trysave()
-        gtk.main_quit()
+        Gtk.main_quit()
         
     def _on_textchanged(self, widget, *args):
         self._dirty=True
@@ -597,9 +598,9 @@ class MainWindow(object):
         try:
             iterp=model.iter_parent(selection_iter)
             itemparent=model.get_value(iterp, 0)
-            print itemparent
+            print(itemparent)
             self.search_text(itemparent)
-        except Exception, ex:
+        except Exception as ex:
             #print ex
             pass #mostly not found --main root --source or imported.
         if selection_iter:
@@ -617,18 +618,18 @@ class MainWindow(object):
     #INIT the EDITOR
     def _init_editor(self):
         
-        self._vpaned1=gtk.VPaned()
+        self._vpaned1=Gtk.VPaned()
         self._hpaned1.add2(self._vpaned1)
         
         #self._hpaned1.add2(self._vpaned1)
         
         self._vpaned1.add1(self._scrolledwindoweditor)
         
-        self._sv=sv.View(sv.Buffer())
+        self._sv=sv.View() #(sv.Buffer())
         self.bcvh=BracketCompletionViewHelper(self._sv)
         self._scrolledwindoweditor.add(self._sv)
         #set default font.
-        font_desc = pango.FontDescription("Monospace 10")
+        font_desc = Pango.FontDescription("Monospace 10")
         if font_desc:
             self._sv.modify_font(font_desc)
             
@@ -651,7 +652,7 @@ class MainWindow(object):
         #self._sv.show()
         
         #Hook it up.
-        self._window1.connect("size-request", self.on_window1_size_request)
+        # self._window1.connect("size-request", self.on_window1_size_request)
         
         
     def on_window1_size_request(self, *args):
@@ -801,7 +802,7 @@ class MainWindow(object):
     
     #ABOUT DIALOG 
     def on_menuitemabout_activate(self, widget, *args):
-        aboutdialog=gtk.AboutDialog()
+        aboutdialog=Gtk.AboutDialog()
         aboutdialog.set_program_name("helloED")
         aboutdialog.set_version("6.0")
         aboutdialog.set_copyright("Copyright (c) 2006-2008 Ahmed Youssef <xmonader@gmail.com>")
@@ -834,7 +835,7 @@ def main():
         if os.path.exists(sys.argv[1]) and os.path.isfile(sys.argv[1]):
             mainwindow.set_current_file(sys.argv[1])
     #mainwindow.window1.show()
-    gtk.main()
+    Gtk.main()
 
 if __name__ == "__main__":
     main()

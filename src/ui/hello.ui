@@ -1,0 +1,699 @@
+<?xml version="1.0"?>
+<interface>
+  <object class="GtkUIManager" id="uimanager1">
+    <child>
+      <object class="GtkActionGroup" id="actiongroup1">
+        <child>
+          <object class="GtkAction" id="menuitemfile">
+            <property name="name">menuitemfile</property>
+            <property name="label" translatable="yes">_File</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemnew">
+            <property name="stock_id">gtk-new</property>
+            <property name="name">menuitemnew</property>
+            <signal handler="on_menuitemnew_activate" name="activate"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemnewwindow">
+            <property name="stock_id">gtk-file</property>
+            <property name="name">menuitemnewwindow</property>
+            <property name="label" translatable="yes">Fork</property>
+            <signal handler="on_menuitemnewwindow_activate" name="activate"/>
+          </object>
+          <accelerator key="f" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemopen">
+            <property name="stock_id">gtk-open</property>
+            <property name="name">menuitemopen</property>
+            <signal handler="on_menuitemopen_activate" name="activate"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemsave">
+            <property name="stock_id">gtk-save</property>
+            <property name="name">menuitemsave</property>
+            <signal handler="on_menuitemsave_activate" name="activate"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemsaveas">
+            <property name="stock_id">gtk-save-as</property>
+            <property name="name">menuitemsaveas</property>
+            <signal handler="on_menuitemsaveas_activate" name="activate"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemquit">
+            <property name="stock_id">gtk-quit</property>
+            <property name="name">menuitemquit</property>
+            <signal handler="on_menuitemquit_activate" name="activate"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemedit">
+            <property name="name">menuitemedit</property>
+            <property name="label" translatable="yes">_Edit</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemcut">
+            <property name="stock_id">gtk-cut</property>
+            <property name="name">menuitemcut</property>
+            <signal handler="on_cut" name="activate"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemcopy">
+            <property name="stock_id">gtk-copy</property>
+            <property name="name">menuitemcopy</property>
+            <signal handler="on_copy" name="activate"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitempaste">
+            <property name="stock_id">gtk-paste</property>
+            <property name="name">menuitempaste</property>
+            <signal handler="on_paste" name="activate"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemfindreplace">
+            <property name="stock_id">gtk-find-and-replace</property>
+            <property name="name">menuitemfindreplace</property>
+            <signal handler="on_menuitemfindreplace_activate" name="activate"/>
+          </object>
+          <accelerator key="r" modifiers="GDK_CONTROL_MASK"/>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemgotoline">
+            <property name="name">menuitemgotoline</property>
+            <property name="label" translatable="yes">Go to Line</property>
+            <signal handler="on_menuitemgotoline_activate" name="activate"/>
+          </object>
+          <accelerator key="g" modifiers="GDK_CONTROL_MASK"/>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemview">
+            <property name="name">menuitemview</property>
+            <property name="label" translatable="yes">_View</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemdocument">
+            <property name="name">menuitemdocument</property>
+            <property name="label" translatable="yes">Document</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemchangefont">
+            <property name="name">menuitemchangefont</property>
+            <property name="label" translatable="yes">Font</property>
+            <signal handler="on_menuitemchangefont_activate" name="activate"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkToggleAction" id="chkmenuitemdrawspaces">
+            <property name="name">chkmenuitemdrawspaces</property>
+            <property name="label" translatable="yes">Draw spaces</property>
+            <signal handler="on_chkmenuitemdrawspaces_toggled" name="toggled"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkToggleAction" id="chkmenuitemspacesinsteadoftabs">
+            <property name="active">True</property>
+            <property name="name">chkmenuitemspacesinsteadoftabs</property>
+            <property name="label" translatable="yes">Spaces instead of tabs</property>
+            <signal handler="on_chkmenuitemspacesinsteadoftabs_toggled" name="toggled"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkToggleAction" id="chkmenuitemshowlinenumbers">
+            <property name="active">True</property>
+            <property name="name">chkmenuitemshowlinenumbers</property>
+            <property name="label" translatable="yes">Line numbering</property>
+            <signal handler="on_chkmenuitemshowlinenumbers_toggled" name="toggled"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemlanguage">
+            <property name="name">menuitemlanguage</property>
+            <property name="label" translatable="yes">Language</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkToggleAction" id="chkmenuitemfullscreen">
+            <property name="name">chkmenuitemfullscreen</property>
+            <property name="label" translatable="yes">Full Screen</property>
+            <signal handler="on_chkmenuitemfullscreen_toggled" name="toggled"/>
+          </object>
+          <accelerator key="F11"/>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemtools">
+            <property name="name">menuitemtools</property>
+            <property name="label" translatable="yes">Tools</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemregextoolkit">
+            <property name="name">menuitemregextoolkit</property>
+            <property name="label" translatable="yes">RegexToolkit</property>
+            <signal handler="on_menuitemregextoolkit_activate" name="activate"/>
+          </object>
+          <accelerator key="r" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemwc">
+            <property name="name">menuitemwc</property>
+            <property name="label" translatable="yes">WC</property>
+            <signal handler="on_menuitemwc_activate" name="activate"/>
+          </object>
+          <accelerator key="w" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuiteabout">
+            <property name="name">menuiteabout</property>
+            <property name="label" translatable="yes">_Help</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="menuitemabout">
+            <property name="stock_id">gtk-about</property>
+            <property name="name">menuitemabout</property>
+            <signal handler="on_menuitemabout_activate" name="activate"/>
+          </object>
+        </child>
+      </object>
+    </child>
+    <ui>
+      <menubar name="menubar1">
+        <menu action="menuitemfile">
+          <menuitem action="menuitemnew"/>
+          <menuitem action="menuitemnewwindow"/>
+          <menuitem action="menuitemopen"/>
+          <menuitem action="menuitemsave"/>
+          <menuitem action="menuitemsaveas"/>
+          <separator/>
+          <menuitem action="menuitemquit"/>
+        </menu>
+        <menu action="menuitemedit">
+          <menuitem action="menuitemcut"/>
+          <menuitem action="menuitemcopy"/>
+          <menuitem action="menuitempaste"/>
+          <separator/>
+          <menuitem action="menuitemfindreplace"/>
+          <separator/>
+          <menuitem action="menuitemgotoline"/>
+        </menu>
+        <menu action="menuitemview">
+          <menu action="menuitemdocument">
+            <menuitem action="menuitemchangefont"/>
+            <menuitem action="chkmenuitemdrawspaces"/>
+            <menuitem action="chkmenuitemspacesinsteadoftabs"/>
+            <menuitem action="chkmenuitemshowlinenumbers"/>
+          </menu>
+          <menuitem action="menuitemlanguage"/>
+          <menuitem action="chkmenuitemfullscreen"/>
+        </menu>
+        <menu action="menuitemtools">
+          <menuitem action="menuitemregextoolkit"/>
+          <menuitem action="menuitemwc"/>
+        </menu>
+        <menu action="menuiteabout">
+          <menuitem action="menuitemabout"/>
+        </menu>
+      </menubar>
+    </ui>
+  </object>
+  <!-- interface-requires gtk+ 2.16 -->
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkWindow" id="window1">
+    <property name="width_request">700</property>
+    <property name="height_request">500</property>
+    <child>
+      <object class="GtkTable" id="table1">
+        <property name="visible">True</property>
+        <property name="n_rows">4</property>
+        <child>
+          <object class="GtkMenuBar" constructor="uimanager1" id="menubar1">
+            <property name="visible">True</property>
+          </object>
+          <packing>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkStatusbar" id="statusbar">
+            <property name="visible">True</property>
+            <property name="spacing">2</property>
+          </object>
+          <packing>
+            <property name="top_attach">3</property>
+            <property name="bottom_attach">4</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHPaned" id="hpaned1">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkToolbar" id="maintoolbar">
+            <property name="visible">True</property>
+            <property name="toolbar_style">icons</property>
+            <property name="icon_size_set">True</property>
+          </object>
+          <packing>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+            <property name="y_options"/>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkDialog" id="dialogfindreplace">
+    <property name="border_width">5</property>
+    <property name="type_hint">normal</property>
+    <!-- <property name="has_separator">False</property> -->
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialogvbox">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+          <object class="GtkTable" id="table1a">
+            <property name="visible">True</property>
+            <property name="n_rows">3</property>
+            <property name="n_columns">2</property>
+            <child>
+              <object class="GtkLabel" id="lblsearch">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Search:</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblreplace">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Replace:</property>
+              </object>
+              <packing>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="entrysearch">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">&#x25CF;</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="entryreplace">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">&#x25CF;</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog.action_area">
+            <property name="visible">True</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="btnfindreplaceclose">
+                <property name="label" translatable="yes">gtk-close</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+                <signal handler="on_btnfindreplaceclose_clicked" name="clicked"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnreplace">
+                <property name="label" translatable="yes">Replace</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal handler="on_btnreplace_clicked" name="clicked"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnreplaceall">
+                <property name="label" translatable="yes">Replace All</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal handler="on_btnreplaceall_clicked" name="clicked"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnfindall">
+                <property name="label" translatable="yes">Find All</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal handler="on_btnfindall_clicked" name="clicked"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnprev">
+                <property name="label" translatable="yes">Previous</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal handler="on_btnprev_clicked" name="clicked"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnfindnext">
+                <property name="label" translatable="yes">Next</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal handler="on_btnfindnext_clicked" name="clicked"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">5</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-7">btnfindreplaceclose</action-widget>
+      <action-widget response="5">btnreplace</action-widget>
+      <action-widget response="4">btnreplaceall</action-widget>
+      <action-widget response="3">btnfindall</action-widget>
+      <action-widget response="2">btnprev</action-widget>
+      <action-widget response="1">btnfindnext</action-widget>
+    </action-widgets>
+  </object>
+  <object class="GtkDialog" id="dialogwc">
+    <property name="border_width">5</property>
+    <property name="type_hint">normal</property>
+    <!-- <property name="has_separator">False</property> -->
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox2">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+          <object class="GtkTable" id="table1gwc">
+            <property name="visible">True</property>
+            <property name="n_rows">5</property>
+            <property name="n_columns">2</property>
+            <child>
+              <object class="GtkLabel" id="label1">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Range:</property>
+              </object>
+              <packing>
+                <property name="x_options">GTK_EXPAND</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label2">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Lines:</property>
+              </object>
+              <packing>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+                <property name="x_options">GTK_EXPAND</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label3">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Words:</property>
+              </object>
+              <packing>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+                <property name="x_options">GTK_EXPAND</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label4">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Chars:</property>
+              </object>
+              <packing>
+                <property name="top_attach">3</property>
+                <property name="bottom_attach">4</property>
+                <property name="x_options">GTK_EXPAND</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label5">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Chars -no spaces-</property>
+              </object>
+              <packing>
+                <property name="top_attach">4</property>
+                <property name="bottom_attach">5</property>
+                <property name="x_options">GTK_EXPAND</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblgwcrange">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblgwclines">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblgwcwords">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblgwcchars">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">3</property>
+                <property name="bottom_attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblgwccharsnospaces">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">4</property>
+                <property name="bottom_attach">5</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area2">
+            <property name="visible">True</property>
+            <property name="layout_style">end</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnwcok">
+                <property name="label" translatable="yes">gtk-ok</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-5">btnwcok</action-widget>
+    </action-widgets>
+  </object>
+  <object class="GtkDialog" id="dialoggotoline">
+    <property name="border_width">5</property>
+    <property name="type_hint">normal</property>
+    <!-- <property name="has_separator">False</property> -->
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox3">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+          <object class="GtkHBox" id="hbox1">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkLabel" id="lblgotoline">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Line:</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="entrygotoline">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">&#x25CF;</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area3">
+            <property name="visible">True</property>
+            <property name="layout_style">end</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <object class="GtkButton" id="btngotoline">
+                <property name="label" translatable="yes">gtk-ok</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+                <signal handler="on_btngotoline_clicked" name="clicked"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-5">btngotoline</action-widget>
+    </action-widgets>
+  </object>
+</interface>

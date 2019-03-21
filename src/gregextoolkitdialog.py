@@ -8,12 +8,12 @@ import os
 from random import choice as random_choice
 from itertools import cycle
 
-import pygtk
-pygtk.require('2.0')
+import gi
+gi.require_version('Gtk', '3.0')
 
-import gtk, gtk.glade
-import gobject
-import pango
+from gi.repository import GLib, GObject, Pango, GdkPixbuf, Gtk
+from gi.repository import GObject
+from gi.repository import Pango
 
 from regextoolkitlib import *
 
@@ -22,34 +22,36 @@ class RegexToolkit(object):
     def __init__(self):
     
         #Widget tree..
-        self.wTree=gtk.glade.XML(os.path.join(os.path.dirname(__file__),'ui', 'gregextoolkitdialog.glade'))
+        self.wTree = Gtk.Builder()
+        self.wTree.add_from_file(os.path.join(os.path.dirname(__file__),'ui', 'gregextoolkitdialog.ui'))
+        # self.wTree=Gtk.glade.XML(os.path.join(os.path.dirname(__file__),'ui', 'gregextoolkitdialog.glade'))
 
         #connect signals and handlers.
-        self.wTree.signal_autoconnect(self)
+        self.wTree.connect_signals(self)
 
-        self.gregextoolkitdialog=self.wTree.get_widget('gregextoolkitdialog')
-        self.vbox1=self.wTree.get_widget('vbox1')
-        self.lblRegex=self.wTree.get_widget('lblRegex')
-        self.regex=self.wTree.get_widget('regex')
-        self.scroll_regex=self.wTree.get_widget('scroll_regex')
-        self.txtRegex=self.wTree.get_widget('txtRegex')
-        self.regex_choices=self.wTree.get_widget('regex_choices')
-        self.chkMULTILINE=self.wTree.get_widget('chkMULTILINE')
-        self.chkDOTALL=self.wTree.get_widget('chkDOTALL')
-        self.chkVERBOSE=self.wTree.get_widget('chkVERBOSE')
-        self.chkUNICODE=self.wTree.get_widget('chkUNICODE')
-        self.chkIGNORECASE=self.wTree.get_widget('chkIGNORECASE')
-        self.chkLOCALE=self.wTree.get_widget('chkLOCALE')
-        self.lblInput=self.wTree.get_widget('lblInput')
-        self.scroll_input=self.wTree.get_widget('scroll_input')
-        self.txtInput=self.wTree.get_widget('txtInput')
-        self.lblResult=self.wTree.get_widget('lblResult')
-        self.scroll_results=self.wTree.get_widget('scroll_results')
-        self.tvResult=self.wTree.get_widget('tvResult')
-        self.buttons=self.wTree.get_widget('buttons')
-        self.btnExecute=self.wTree.get_widget('btnExecute')
-        self.btnRegexLib=self.wTree.get_widget('btnRegexLib')
-        self.statusbar=self.wTree.get_widget('statusbar')
+        self.gregextoolkitdialog=self.wTree.get_object('gregextoolkitdialog')
+        self.vbox1=self.wTree.get_object('vbox1')
+        self.lblRegex=self.wTree.get_object('lblRegex')
+        self.regex=self.wTree.get_object('regex')
+        self.scroll_regex=self.wTree.get_object('scroll_regex')
+        self.txtRegex=self.wTree.get_object('txtRegex')
+        self.regex_choices=self.wTree.get_object('regex_choices')
+        self.chkMULTILINE=self.wTree.get_object('chkMULTILINE')
+        self.chkDOTALL=self.wTree.get_object('chkDOTALL')
+        self.chkVERBOSE=self.wTree.get_object('chkVERBOSE')
+        self.chkUNICODE=self.wTree.get_object('chkUNICODE')
+        self.chkIGNORECASE=self.wTree.get_object('chkIGNORECASE')
+        self.chkLOCALE=self.wTree.get_object('chkLOCALE')
+        self.lblInput=self.wTree.get_object('lblInput')
+        self.scroll_input=self.wTree.get_object('scroll_input')
+        self.txtInput=self.wTree.get_object('txtInput')
+        self.lblResult=self.wTree.get_object('lblResult')
+        self.scroll_results=self.wTree.get_object('scroll_results')
+        self.tvResult=self.wTree.get_object('tvResult')
+        self.buttons=self.wTree.get_object('buttons')
+        self.btnExecute=self.wTree.get_object('btnExecute')
+        self.btnRegexLib=self.wTree.get_object('btnRegexLib')
+        self.statusbar=self.wTree.get_object('statusbar')
         self.btnRegexLib.set_sensitive(False)
         self.flags=0
         self.flagsdict={}
@@ -61,23 +63,23 @@ class RegexToolkit(object):
             
             
         #TreeView columns.
-        midcell=gtk.CellRendererText()
-        midcol=gtk.TreeViewColumn("#mid", midcell, text=0)
+        midcell=Gtk.CellRendererText()
+        midcol=Gtk.TreeViewColumn("#mid", midcell, text=0)
         self.tvResult.append_column(midcol)
         
-        self.txtInput.get_buffer().create_tag("red_fg", foreground="red")#size=15*pango.SCALE)
-        self.txtInput.get_buffer().create_tag("blue_fg", foreground="blue")#size=15*pango.SCALE)
-        self.txtInput.get_buffer().create_tag("darkgreen_fg", foreground="#33773B") #size=15*pango.SCALE)
-        self.txtInput.get_buffer().create_tag("darkred_bg", foreground="#BB0A0A") #size=15*pango.SCALE )
+        self.txtInput.get_buffer().create_tag("red_fg", foreground="red")#size=15*Pango.SCALE)
+        self.txtInput.get_buffer().create_tag("blue_fg", foreground="blue")#size=15*Pango.SCALE)
+        self.txtInput.get_buffer().create_tag("darkgreen_fg", foreground="#33773B") #size=15*Pango.SCALE)
+        self.txtInput.get_buffer().create_tag("darkred_bg", foreground="#BB0A0A") #size=15*Pango.SCALE )
         self.txtInput.get_buffer().create_tag("dbrow_fg", foreground="#7F6628")
-        #self.txtInput.get_buffer().create_tag("lightbr_fg", foreground="#DBD39C", ) #size=15*pango.SCALE )
-        self.txtInput.get_buffer().create_tag("vi_fg", foreground="#5F4E84")# size=15*pango.SCALE )
+        #self.txtInput.get_buffer().create_tag("lightbr_fg", foreground="#DBD39C", ) #size=15*Pango.SCALE )
+        self.txtInput.get_buffer().create_tag("vi_fg", foreground="#5F4E84")# size=15*Pango.SCALE )
         
         self.buf_tags=["red_fg", "blue_fg", "darkgreen_fg", "vi_fg", "darkred_fg", "dbrow_fg"] # "lightbr_fg"
               
         
     def update_flags(self):
-        for k, v in self.flagsdict.items():
+        for k, v in list(self.flagsdict.items()):
             if not v:
                 del self.flagsdict[k]
                 
@@ -97,7 +99,7 @@ class RegexToolkit(object):
         for m in ms:
             for idx in range(len(m.groups())):
                 pos = idx+1
-                tag=tagscycle.next()
+                tag=next(tagscycle)
                 ##FIXME: ronny coloring evalutes to 0/1 tags only
                 #tag=idx%len(self.buf_tags)
                 #tag = random_choice(range(len(self.buf_tags))) #idx%len(self.buf_tags)
@@ -127,10 +129,10 @@ class RegexToolkit(object):
         reg=re.compile(self.get_text_from_buffer(self.txtRegex.get_buffer()))
         namedgroupsdict={}
         #print "REG GIDX: ", reg.groupindex
-        for gname, idx  in reg.groupindex.items():
+        for gname, idx  in list(reg.groupindex.items()):
             namedgroupsdict[idx]=gname
-        #tstore=gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING) #mid, gid, name, match 
-        tstore=gtk.TreeStore(gobject.TYPE_STRING)
+        #tstore=Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING) #mid, gid, name, match 
+        tstore=Gtk.TreeStore(GObject.TYPE_STRING)
         miter = tstore.get_iter_first()
         for mid, m in enumerate(ms):
 
@@ -154,14 +156,14 @@ class RegexToolkit(object):
     def _remove_columns(self):
         #colslist=self.tvResult.get_columns()
         #map(self.tvResult.remove_column, colslist)
-        map(self.tvResult.remove_column, self.tvResult.get_columns())
+        list(map(self.tvResult.remove_column, self.tvResult.get_columns()))
         
     def on_btnRegexLib_clicked(self, widget, *args):
         pass
 
     def remove_columns(self):
         colslist=self.tvResult.get_columns()
-        map(self.tvResult.remove_column, colslist)
+        list(map(self.tvResult.remove_column, colslist))
 
 
     def get_dialog(self):
@@ -173,8 +175,8 @@ class RegexToolkit(object):
 def main():
     regextkd = RegexToolkit()
     #mainwindow.regextoolkitdialog.show()
-    print regextkd.get_dialog().run()
-    gtk.main()
+    print(regextkd.get_dialog().run())
+    Gtk.main()
 
 if __name__ == "__main__":
     main()

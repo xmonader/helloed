@@ -19,7 +19,7 @@
 
 import sys, os
 from os.path import exists, dirname
-import StringIO
+import io
 import inspect
 
 try:
@@ -30,9 +30,9 @@ except ImportError:
 
 
 #gtk
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GObject
 from pyconsole import Console
 from terminal import GeditTerminal
 try:
@@ -45,9 +45,10 @@ except ImportError:
 
         
 
-class FileBrowserTV(gtk.TreeView):
+class FileBrowserTV(Gtk.TreeView):
     
     def __init__(self, path=os.getcwd()):
+        self.__name__ = "FileBrowserTV"
         super(FileBrowserTV, self).__init__()
         self._path=path
         self.search_pred=lambda x: x
@@ -63,11 +64,11 @@ class FileBrowserTV(gtk.TreeView):
     path=property(fget=lambda self: self._path, fset=set_path)
     
     def _init_tv(self):
-        filescolumn=gtk.TreeViewColumn()
+        filescolumn=Gtk.TreeViewColumn()
         filescolumn.set_title("Files")
         
-        iconrenderer=gtk.CellRendererPixbuf()
-        cellrenderer=gtk.CellRendererText()
+        iconrenderer=Gtk.CellRendererPixbuf()
+        cellrenderer=Gtk.CellRendererText()
         
         filescolumn.pack_start(iconrenderer, True)
         filescolumn.add_attribute(iconrenderer, 'stock_id', 0)
@@ -79,7 +80,7 @@ class FileBrowserTV(gtk.TreeView):
     update_view=lambda self: self._update_view()
     def _update_view(self):
         self.model=None
-        lstore=gtk.ListStore(str, str)
+        lstore=Gtk.ListStore(str, str)
         flist=os.listdir(self.path)
         #flist.sort()
         dirs=[x for x in flist if os.path.isdir(self.path+os.path.sep+x)]
@@ -94,7 +95,7 @@ class FileBrowserTV(gtk.TreeView):
             if os.path.isdir(fpath):
                 #print "\tadding: ", f
                 if self.search_pred(f):
-                    lstore.append([gtk.STOCK_DIRECTORY, f])
+                    lstore.append([Gtk.STOCK_DIRECTORY, f])
                 #flist.remove(f)
         
         #for f in flist:
@@ -105,7 +106,7 @@ class FileBrowserTV(gtk.TreeView):
                 #print "\tadding: ", f
 
                 if self.search_pred(f):
-                    lstore.append([gtk.STOCK_FILE, f])
+                    lstore.append([Gtk.STOCK_FILE, f])
                 #flist.remove(f)
         self.set_model(lstore)
         
@@ -141,7 +142,7 @@ class PythonSourcePlugin(object):
         return inspect.getmembers(self.m, inspect.isfunction)
         
     
-class SourceCodeTreeView(gtk.TreeView):
+class SourceCodeTreeView(Gtk.TreeView):
     
     def __init__(self, clicked_callback=None):
         
@@ -150,10 +151,10 @@ class SourceCodeTreeView(gtk.TreeView):
         self.on_item_clicked=clicked_callback
         
     def _init_tv(self):
-        sourcecolumn=gtk.TreeViewColumn()
+        sourcecolumn=Gtk.TreeViewColumn()
         sourcecolumn.set_title("Source")
         
-        cellrenderer=gtk.CellRendererText()
+        cellrenderer=Gtk.CellRendererText()
         sourcecolumn.pack_start(cellrenderer, True)
         sourcecolumn.add_attribute(cellrenderer, "text", 0)
         
@@ -165,7 +166,7 @@ class SourceCodeTreeView(gtk.TreeView):
         
     def update_view(self):
         
-        tstore=gtk.TreeStore(str)
+        tstore=Gtk.TreeStore(str)
         miter=tstore.append(None, ["Source"])
         
         for (classname, class_) in self.lang.get_classes():
@@ -178,7 +179,7 @@ class SourceCodeTreeView(gtk.TreeView):
         self.set_model(tstore)
    
    
-class XMLTreeView(gtk.TreeView):
+class XMLTreeView(Gtk.TreeView):
 
         
     def __init__(self, xml=None, clicked_callback=None):
@@ -188,17 +189,17 @@ class XMLTreeView(gtk.TreeView):
         self.on_item_clicked=clicked_callback
     
     def _init_tv(self):
-        tagscolumn=gtk.TreeViewColumn()
+        tagscolumn=Gtk.TreeViewColumn()
         tagscolumn.set_title("Tags")
         
-        cellrenderer=gtk.CellRendererText()
+        cellrenderer=Gtk.CellRendererText()
         tagscolumn.pack_start(cellrenderer, True)
         tagscolumn.add_attribute(cellrenderer, "text", 0)
         
         self.append_column(tagscolumn)
         
     def _get_string_stream(self, text):
-        return StringIO.StringIO(text)
+        return io.StringIO(text)
         
     def set_xml(self, xml):
         if xml is not None:
@@ -210,7 +211,7 @@ class XMLTreeView(gtk.TreeView):
             
     def update_view(self):
         
-        tstore=gtk.TreeStore(str)
+        tstore=Gtk.TreeStore(str)
         miter=tstore.append(None, [self.root.tag])
         
         def update_iter_with_tag(tstore, iter, tag):
@@ -225,7 +226,7 @@ class XMLTreeView(gtk.TreeView):
                         tstore.append(i, [t.text])  
 
 
-                for attrname, attrvalue in t.attrib.items():
+                for attrname, attrvalue in list(t.attrib.items()):
                     tstore.append(i, [attrname+  "="+attrvalue if attrvalue.strip() else ""])
                 if len(t.getchildren())>0:
                     update_iter_with_tag(tstore, i, t)
@@ -234,7 +235,7 @@ class XMLTreeView(gtk.TreeView):
         self.set_model(tstore)
             
 if have_happymapper:
-    class XMLTreeViewHM(gtk.TreeView):
+    class XMLTreeViewHM(Gtk.TreeView):
 
             
         def __init__(self, xml=None, clicked_callback=None):
@@ -244,10 +245,10 @@ if have_happymapper:
             self.on_item_clicked=clicked_callback
         
         def _init_tv(self):
-            tagscolumn=gtk.TreeViewColumn()
+            tagscolumn=Gtk.TreeViewColumn()
             tagscolumn.set_title("Tags")
             
-            cellrenderer=gtk.CellRendererText()
+            cellrenderer=Gtk.CellRendererText()
             tagscolumn.pack_start(cellrenderer, True)
             tagscolumn.add_attribute(cellrenderer, "text", 0)
             
@@ -261,7 +262,7 @@ if have_happymapper:
                 
         def update_view(self):
             
-            tstore=gtk.TreeStore(str)
+            tstore=Gtk.TreeStore(str)
             miter=tstore.append(None, [self.root.itsname])
             
             def update_iter_with_tag(tstore, iter, tag):
@@ -281,7 +282,7 @@ if have_happymapper:
         
          
         
-class SidePaneBrowser(gtk.VBox):
+class SidePaneBrowser(Gtk.VBox):
     
     def __init__(self, path=os.getcwd()):
         super(SidePaneBrowser, self).__init__(False, 0)
@@ -294,23 +295,23 @@ class SidePaneBrowser(gtk.VBox):
 
     def _init_comp(self, path):
         
-        self.tbar=gtk.Toolbar()
-        self.tbar.set_style(gtk.TOOLBAR_ICONS)
+        self.tbar=Gtk.Toolbar()
+        # self.tbar.set_style(Gtk.TOOLBAR_ICONS)
 
-        self.pathentry=gtk.Entry()
+        self.pathentry=Gtk.Entry()
         self.pathentry.connect("key-press-event", self._on_keypressed)
         self.pack_start(self.pathentry, False, False, 5)
         
-        self.refreshbtn=gtk.ToolButton("gtk-refresh")
+        self.refreshbtn=Gtk.ToolButton("gtk-refresh")
         self.refreshbtn.connect("clicked", self._on_btnrefresh_clicked)
         
-        self.gobtn=gtk.ToolButton("gtk-ok")
+        self.gobtn=Gtk.ToolButton("gtk-ok")
         self.gobtn.connect("clicked", self._on_btngo_clicked)
         
-        self.upbtn=gtk.ToolButton("gtk-go-up")
+        self.upbtn=Gtk.ToolButton("gtk-go-up")
         self.upbtn.connect("clicked", self._on_upbtnclicked)
         
-        self.homebtn=gtk.ToolButton("gtk-home")
+        self.homebtn=Gtk.ToolButton("gtk-home")
         self.homebtn.connect("clicked", self._on_homebtnclicked)
         
         self.tbar.insert(self.refreshbtn, 0)
@@ -318,7 +319,7 @@ class SidePaneBrowser(gtk.VBox):
         self.tbar.insert(self.gobtn, 2)
         self.tbar.insert(self.homebtn, 3)
         
-        scrolled=gtk.ScrolledWindow()
+        scrolled=Gtk.ScrolledWindow()
         self.fbtv=FileBrowserTV(path)
         self.pathentry.set_text(self.fbtv.path)
         self.fbtv.connect("row-activated", self._ontvitemclicked)
@@ -327,10 +328,10 @@ class SidePaneBrowser(gtk.VBox):
         self.pack_start(self.tbar, False, False, 0)
         self.pack_start(scrolled, True, True, 0)
         
-        self.matchfilenameexpander=gtk.Expander("Match Filename:")
+        self.matchfilenameexpander=Gtk.Expander() #("Match Filename:")
         self.pack_start(self.matchfilenameexpander, False, False, 2)
         
-        self.matchfilenameentry=gtk.Entry()
+        self.matchfilenameentry=Gtk.Entry()
         self.matchfilenameentry.connect("key-press-event", self._onmatchfilenameentry_keypressed)
         self.matchfilenameexpander.add(self.matchfilenameentry)
        
@@ -339,7 +340,7 @@ class SidePaneBrowser(gtk.VBox):
 
     #FIXME:
     def _onmatchfilenameentry_keypressed(self, w, event):
-        if gtk.gdk.keyval_name(event.keyval)=="Return": #Enter
+        if Gdk.keyval_name(event.keyval)=="Return": #Enter
             self.matchfilename=w.get_text()
             self.fbtv.set_search_pred(lambda x: self.matchfilename in x)
             self.fbtv.update_view()
@@ -365,8 +366,8 @@ class SidePaneBrowser(gtk.VBox):
                     else:
                         if callable(self.openfilecallback):
                             self.openfilecallback(itempath)
-            except Exception, ex:
-                print ex
+            except Exception as ex:
+                print(ex)
     
 
     #TREE VIEW CONNECTIONS
@@ -375,7 +376,7 @@ class SidePaneBrowser(gtk.VBox):
         self.pathentry.set_text(self.fbtv.path)
         
     def _on_keypressed(self, widget, event):
-        if gtk.gdk.keyval_name(event.keyval)=="Return": #Enter
+        if Gdk.keyval_name(event.keyval)=="Return": #Enter
             self._go_to_entry()
         
     def _set_entry(self, to):
@@ -398,30 +399,30 @@ class SidePaneBrowser(gtk.VBox):
         self._set_entry(self.fbtv.path)
 
     
-class LeftSidePane(gtk.Notebook):
+class LeftSidePane(Gtk.Notebook):
     def __init__(self, *args):
-        gtk.Notebook.__init__(self, *args)
+        Gtk.Notebook.__init__(self, *args)
         self.add_filebrowser()
         self.add_xmlviewer()
         self.add_sourceviewer()
         
     def add_filebrowser(self):
         self.filebrowser=SidePaneBrowser()
-        self.append_page(self.filebrowser, gtk.Label("FileBrowser"))
+        self.append_page(self.filebrowser, Gtk.Label(label="FileBrowser"))
         
     def add_xmlviewer(self):
-        scrolled=gtk.ScrolledWindow()
-        scrolled.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled=Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.xmlviewer=XMLTreeView()
         scrolled.add(self.xmlviewer)
-        self.append_page(scrolled, gtk.Label("XMLViewer"))
+        self.append_page(scrolled, Gtk.Label(label="XMLViewer"))
         
     def add_sourceviewer(self):
-        scrolled=gtk.ScrolledWindow()
-        scrolled.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled=Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.sourceviewer=SourceCodeTreeView()
         scrolled.add(self.sourceviewer)
-        self.append_page(scrolled, gtk.Label("SourceViewer"))
+        self.append_page(scrolled, Gtk.Label(label="SourceViewer"))
 
 
 
@@ -501,8 +502,8 @@ class HPaste(object):
 
 
 #FROM pida.utils.web
-from urllib import urlencode
-from urllib2 import urlopen, Request
+from urllib.parse import urlencode
+from urllib.request import urlopen, Request
 def fetch_url(url, data={}, auth=None):
     """
     fetch a URL.
@@ -531,7 +532,7 @@ def fetch_url(url, data={}, auth=None):
             f = urlopen(*urlargs)
             content = f.read()
             url = f.url
-        except Exception, e:
+        except Exception as e:
             content = str(e)
             url = None
         return url, content
@@ -553,7 +554,7 @@ class Paster(object):
         #print "pasted..: ", link
         
                 
-class PasterWidget(gtk.VBox):
+class PasterWidget(Gtk.VBox):
     
     def __init__(self, homogeneous=True, spacing=0):
         super(PasterWidget, self).__init__(homogeneous, spacing)
@@ -561,37 +562,37 @@ class PasterWidget(gtk.VBox):
         self.paster=Paster()
         
     def _init_comps(self):
-        hb1=gtk.HBox(True, 2)
-        hb1.pack_start(gtk.Label("Author: "),True, True, 2)
-        self.authorentry=gtk.Entry()
+        hb1=Gtk.HBox(True, 2)
+        hb1.pack_start(Gtk.Label("Author: ", True, True, 0),True, True, 2)
+        self.authorentry=Gtk.Entry()
         hb1.pack_start(self.authorentry,True, True, 2)
 
-        hb2=gtk.HBox(True, 2)
-        hb2.pack_start(gtk.Label("Title: "),True, True, 2)
-        self.titleentry=gtk.Entry()
+        hb2=Gtk.HBox(True, 2)
+        hb2.pack_start(Gtk.Label("Title: ", True, True, 0),True, True, 2)
+        self.titleentry=Gtk.Entry()
         hb2.pack_start(self.titleentry,True, True, 2)
         
-        hb3=gtk.HBox(True, 2)
-        hb3.pack_start(gtk.Label("Code: "),True, True, 2)
-        self.txtview=gtk.TextView()
-        scrolled=gtk.ScrolledWindow()
-        scrolled.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        hb3=Gtk.HBox(True, 2)
+        hb3.pack_start(Gtk.Label("Code: ", True, True, 0),True, True, 2)
+        self.txtview=Gtk.TextView()
+        scrolled=Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         scrolled.add(self.txtview)
         hb3.pack_start(scrolled,True, True, 2)
 
         
-        hb4=gtk.HBox(True, 2)
-        hb4.pack_start(gtk.Label("Language: "),True, True, 2)
-        self.langentry=gtk.Entry()
+        hb4=Gtk.HBox(True, 2)
+        hb4.pack_start(Gtk.Label("Language: ", True, True, 0),True, True, 2)
+        self.langentry=Gtk.Entry()
         hb4.pack_start(self.langentry,True, True, 2)
 
-        hb5=gtk.HBox(True, 2)
-        hb5.pack_start(gtk.Label("Link: "),True, True, 2)
-        self.linkentry=gtk.Entry()
+        hb5=Gtk.HBox(True, 2)
+        hb5.pack_start(Gtk.Label("Link: ", True, True, 0),True, True, 2)
+        self.linkentry=Gtk.Entry()
         hb5.pack_start(self.linkentry,True, True, 2)
 
-        hb6=gtk.HBox(True, 2)
-        self.btn_paste=gtk.Button("Paste!")
+        hb6=Gtk.HBox(True, 2)
+        self.btn_paste=Gtk.Button("Paste!")
         self.btn_paste.connect("clicked", self._on_paste)
         hb6.pack_start(self.btn_paste,True, True, 2)
        
@@ -602,33 +603,33 @@ class PasterWidget(gtk.VBox):
         self.pack_start(hb5, True, True, 2)
         self.pack_start(hb6, True, True, 2)
         
-        #self.tbl=gtk.Table(6, 2)
+        #self.tbl=Gtk.Table(6, 2)
         #self.tbl.set_row_spacings(10)
         #self.tbl.set_col_spacings(4)
-        #self.tbl.attach(gtk.Label("Author: "),0, 1, 0, 1)
-        #self.authorentry=gtk.Entry()
+        #self.tbl.attach(Gtk.Label(label="Author: "),0, 1, 0, 1)
+        #self.authorentry=Gtk.Entry()
         #self.tbl.attach(self.authorentry, 1, 2, 0, 1)
         
-        #self.tbl.attach(gtk.Label("Title: "), 0, 1, 1, 2)
-        #self.titleentry=gtk.Entry()
+        #self.tbl.attach(Gtk.Label(label="Title: "), 0, 1, 1, 2)
+        #self.titleentry=Gtk.Entry()
         #self.tbl.attach(self.titleentry, 1, 2, 1, 2)
         
-        #self.tbl.attach(gtk.Label("Code: "),0, 1, 2, 3)
-        #self.txtview=gtk.TextView()
-        #scrolled=gtk.ScrolledWindow()
-        #scrolled.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        #self.tbl.attach(Gtk.Label(label="Code: "),0, 1, 2, 3)
+        #self.txtview=Gtk.TextView()
+        #scrolled=Gtk.ScrolledWindow()
+        #scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         #scrolled.add(self.txtview)
         #self.tbl.attach(scrolled, 1, 2, 2, 3)
         
-        #self.tbl.attach(gtk.Label("Language: "), 0, 1, 3, 4)
-        #self.langentry=gtk.Entry()
+        #self.tbl.attach(Gtk.Label(label="Language: "), 0, 1, 3, 4)
+        #self.langentry=Gtk.Entry()
         #self.tbl.attach(self.langentry, 1, 2, 3, 4)
         
-        #self.tbl.attach(gtk.Label("Link: "), 0, 1, 4, 5)
-        #self.linkentry=gtk.Entry()
+        #self.tbl.attach(Gtk.Label(label="Link: "), 0, 1, 4, 5)
+        #self.linkentry=Gtk.Entry()
         #self.tbl.attach(self.linkentry, 1, 2, 4, 5)
         
-        #self.btn_paste=gtk.Button("Paste!")
+        #self.btn_paste=Gtk.Button("Paste!")
         #self.btn_paste.connect("clicked", self._on_paste)
         #self.tbl.attach(self.btn_paste, 1, 2, 5, 6)
         
@@ -647,10 +648,10 @@ class PasterWidget(gtk.VBox):
             self.linkentry.set_text(link)
         
         
-class TabWidget(gtk.Notebook):
+class TabWidget(Gtk.Notebook):
     
     def __init__(self, *args):
-        gtk.Notebook.__init__(self, *args)
+        GObject.GObject.__init__(self, *args)
         #self.add_simple_label()
         self.add_terminal()
         self.add_python_console()
@@ -659,36 +660,36 @@ class TabWidget(gtk.Notebook):
         
     def add_terminal(self):
         self.gterminal=GeditTerminal()
-        self.append_page(self.gterminal, gtk.Label("Terminal"))
-        #self.append_page(PidaTerminal(), gtk.Label("Terminal"))
+        self.append_page(self.gterminal, Gtk.Label(label="Terminal"))
+        #self.append_page(PidaTerminal(), Gtk.Label(label="Terminal"))
         
     def add_python_console(self):
-        self.append_page(Console(), gtk.Label("PyConsole"))
+        self.append_page(Console(), Gtk.Label(label="PyConsole"))
         
     def add_scribble(self):
-        self.scribble_scrolled_window=gtk.ScrolledWindow()
-        self.scribble_scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.scribble_tv=gtk.TextView()
+        self.scribble_scrolled_window=Gtk.ScrolledWindow()
+        self.scribble_scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self.scribble_tv=Gtk.TextView()
         self.scribble_scrolled_window.add(self.scribble_tv)
-        self.append_page(self.scribble_scrolled_window, gtk.Label("Scribble"))
+        self.append_page(self.scribble_scrolled_window, Gtk.Label(label="Scribble"))
         
     
     def add_paster(self):
         #FIXME
-        scrolled=gtk.ScrolledWindow()
-        scrolled.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled=Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.paster=PasterWidget()
         scrolled.add(self.paster)
-        self.append_page(scrolled, gtk.Label("Paster"))
+        self.append_page(scrolled, Gtk.Label(label="Paster"))
         
     #def add_simple_label(self):
-        #self.append_page(gtk.Label("Hi"), gtk.Label("simple label"))
+        #self.append_page(Gtk.Label(label="Hi"), Gtk.Label(label="simple label"))
         
         
-class BottomPane(gtk.VBox):
+class BottomPane(Gtk.VBox):
     
     def __init__(self, *args):
-        gtk.VBox.__init__(self, *args)
+        GObject.GObject.__init__(self, *args)
         self._init_comps()
         
     def _init_comps(self):
@@ -708,7 +709,7 @@ class WC(object):
      
 
 #GEDIT: bracketcompletion plugin.
-from gtk import gdk
+from gi.repository import Gdk
 
 common_brackets = {
     '(' : ')',
@@ -805,11 +806,11 @@ class BracketCompletionViewHelper(object):
         # get the corresponding keyvals
         self._bracket_keyvals = set()
         for b in self._brackets:
-            kv = gtk.gdk.unicode_to_keyval(ord(b[-1]))
+            kv = Gdk.unicode_to_keyval(ord(b[-1]))
             if (kv):
                 self._bracket_keyvals.add(kv)
         for b in close_brackets:
-            kv = gtk.gdk.unicode_to_keyval(ord(b[-1]))
+            kv = Gdk.unicode_to_keyval(ord(b[-1]))
             if (kv):
                 self._bracket_keyvals.add(kv)
 
@@ -854,8 +855,8 @@ class BracketCompletionViewHelper(object):
     def compute_indentation (self, cur):
         """
         Compute indentation at the given iterator line
-        view : gtk.TextView
-        cur : gtk.TextIter
+        view : Gtk.TextView
+        cur : Gtk.TextIter
         """
         start = self._doc.get_iter_at_line(cur.get_line())
         end = start.copy();
@@ -878,13 +879,13 @@ class BracketCompletionViewHelper(object):
         self.update_active()
 
     def on_key_press_event(self, view, event):
-        if event.state & (gdk.CONTROL_MASK | gdk.MOD1_MASK):
+        if event.get_state() & (Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.MOD1_MASK):
             return False
 
-        if event.keyval in (gtk.keysyms.Left, gtk.keysyms.Right):
+        if event.keyval in (Gdk.KEY_Left, Gdk.KEY_Right):
             self._stack = []
 
-        if event.keyval == gtk.keysyms.BackSpace:
+        if event.keyval == Gdk.KEY_BackSpace:
             self._stack = []
             
             if self._last_iter == None:
@@ -898,7 +899,7 @@ class BracketCompletionViewHelper(object):
             self._last_iter = None
             return True
 
-        if event.keyval in (gtk.keysyms.Return, gtk.keysyms.KP_Enter) and \
+        if event.keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter) and \
            view.get_auto_indent() and self._last_iter != None:
             # This code has barely been adapted from gtksourceview.c
             # Note: it might break IM!
@@ -927,8 +928,8 @@ class BracketCompletionViewHelper(object):
         return False
 
     def on_event_after(self, view, event):
-        if event.type != gdk.KEY_PRESS or \
-           event.state & (gdk.CONTROL_MASK | gdk.MOD1_MASK) or \
+        if event.type != Gdk.KEY_PRESS or \
+           event.get_state() & (Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.MOD1_MASK) or \
            event.keyval not in self._bracket_keyvals:
             return
         
@@ -1002,11 +1003,11 @@ def testmoduleviewer():
     p=PythonSourcePlugin()
     p.set_module_path("/home/ahmed/tstqlistwidget.py")
     
-    print p.get_classes()[0][1]
+    print(p.get_classes()[0][1])
     #print type(p.get_classes())
     
-    print p.get_methods_of(p.get_classes()[0][1])
-    print p.get_functions()
+    print(p.get_methods_of(p.get_classes()[0][1]))
+    print(p.get_functions())
 
 if __name__=="__main__":
     testmoduleviewer()

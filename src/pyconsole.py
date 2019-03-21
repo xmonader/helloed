@@ -22,11 +22,16 @@
 # The use case is: you have a python program, you create this widget,
 # and inspect your program interiors.
 
-import gtk
-import gtk.gdk as gdk
-import gobject
-import pango
-import gtk.keysyms as keys
+import gi
+gi.require_version('Gdk', '3.0') 
+gi.require_version('GtkSource', '3.0') 
+from gi.repository import Gtk
+from gi.repository import Gdk
+
+from gi.repository import GObject
+from gi.repository import Pango
+
+import gi.repository.Gdk as keys
 import code
 import sys
 import keyword
@@ -84,8 +89,8 @@ class _ReadLine(object):
     def __init__(self):
         object.__init__(self)
 
-        self.set_wrap_mode(gtk.WRAP_CHAR)
-        self.modify_font(pango.FontDescription("Monospace"))
+        self.set_wrap_mode(Gtk.WrapMode.CHAR)
+        self.modify_font(Pango.FontDescription("Monospace"))
 
         self.buffer = self.get_buffer()
         self.buffer.connect("insert-text", self.on_buf_insert)
@@ -130,7 +135,7 @@ class _ReadLine(object):
             self.thaw_undo()
 
         self.__move_cursor_to(iter)
-        self.scroll_to_mark(self.cursor, 0.2)
+        # self.scroll_to_mark(self.cursor, 0.2)
 
         self.in_raw_input = True
 
@@ -212,9 +217,9 @@ class _ReadLine(object):
         self.tab_pressed = 0
         handled = True
 
-        state = event.state & (gdk.SHIFT_MASK |
-                                gdk.CONTROL_MASK |
-                                gdk.MOD1_MASK)
+        state = event.get_state() & (Gdk.ModifierType.SHIFT_MASK |
+                                Gdk.ModifierType.CONTROL_MASK |
+                                Gdk.ModifierType.MOD1_MASK)
         keyval = event.keyval
 
         if not state:
@@ -237,7 +242,7 @@ class _ReadLine(object):
                 self.__complete()
             else:
                 handled = False
-        elif state == gdk.CONTROL_MASK:
+        elif state == Gdk.ModifierType.CONTROL_MASK:
             if keyval == keys.u:
                 start = self.__get_start()
                 end = self.__get_cursor()
@@ -305,9 +310,9 @@ class _ReadLine(object):
         self.__delete(iter, end)
 
     def __get_width(self):
-        if not (self.flags() & gtk.REALIZED):
+        if not (self.get_realized()):
             return 80
-        layout = pango.Layout(self.get_pango_context())
+        layout = Pango.Layout(self.get_pango_context())
         letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         layout.set_text(letters)
         pix_width = layout.get_pixel_size()[0]
@@ -532,7 +537,7 @@ class _Console(_ReadLine, code.InteractiveInterpreter):
         except: pass
 
         try:
-            exec "import __builtin__" in self.locals
+            exec("import __builtin__" in self.locals)
             strings.extend(eval("dir(__builtin__)", self.locals))
         except:
             pass
@@ -545,46 +550,46 @@ class _Console(_ReadLine, code.InteractiveInterpreter):
         return completions
 
 
-def ReadLineType(t=gtk.TextView):
+def ReadLineType(t=Gtk.TextView):
     class readline(t, _ReadLine):
         def __init__(self, *args, **kwargs):
             t.__init__(self)
             _ReadLine.__init__(self, *args, **kwargs)
         def do_key_press_event(self, event):
             return _ReadLine.do_key_press_event(self, event, t)
-    gobject.type_register(readline)
+    GObject.type_register(readline)
     return readline
 
-def ConsoleType(t=gtk.TextView):
+def ConsoleType(t=Gtk.TextView):
     class console(t, _Console):
         def __init__(self, *args, **kwargs):
             t.__init__(self)
             _Console.__init__(self, *args, **kwargs)
         def do_key_press_event(self, event):
             return _Console.do_key_press_event(self, event, t)
-    gobject.type_register(console)
+    GObject.type_register(console)
     return console
 
 ReadLine = ReadLineType()
 Console = ConsoleType()
 
 if __name__ == '__main__':
-    window = gtk.Window()
-    swin = gtk.ScrolledWindow()
-    swin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+    window = Gtk.Window()
+    swin = Gtk.ScrolledWindow()
+    swin.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.ALWAYS)
     window.add(swin)
     swin.add(Console(banner="Hello there!",
                      use_rlcompleter=False,
                      start_script="import gtk\n" + \
-                                  "win = gtk.Window()\n" + \
-                                  "label = gtk.Label('Hello there!')\n" + \
+                                  "win = Gtk.Window()\n" + \
+                                  "label = Gtk.Label(label='Hello there!')\n" + \
                                   "win.add(label)\n" + \
                                   "win.show_all()\n"))
     window.set_default_size(400, 300)
     window.show_all()
 
-    if not gtk.main_level():
-        window.connect("destroy", gtk.main_quit)
-        gtk.main()
+    if not Gtk.main_level():
+        window.connect("destroy", Gtk.main_quit)
+        Gtk.main()
 
 # kate: space-indent on; indent-width 4; strip on;
