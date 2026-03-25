@@ -104,7 +104,18 @@ class Application(GObject.GObject, EventMixin):
             self.create_window()
         
         try:
+            # Verify windows are visible
+            for i, win in enumerate(self._windows):
+                if win.get_visible():
+                    logger.debug("Window %d is visible", i)
+                else:
+                    logger.warning("Window %d is NOT visible", i)
+                    win.show_all()
+                    win.present()
+            
+            logger.info("Entering GTK main loop...")
             Gtk.main()
+            logger.info("GTK main loop exited")
             return 0
         except Exception as e:
             logger.exception("Error in main loop: %s", e)
@@ -144,6 +155,7 @@ class Application(GObject.GObject, EventMixin):
         
         window.connect("delete-event", self._on_window_close)
         window.show_all()
+        window.present()
         
         self._active_window = window
         self.emit('window-created', window)
@@ -177,6 +189,7 @@ class Application(GObject.GObject, EventMixin):
         Returns:
             True to prevent closing, False to allow
         """
+        logger.debug("Window close event received")
         # Check for unsaved changes
         # TODO: Check all documents in window
         self.close_window(window)
