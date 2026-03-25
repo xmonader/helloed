@@ -153,6 +153,11 @@ class MainWindow(Gtk.Window, EventMixin):
         find_item.connect("activate", self._on_find)
         edit_menu.append(find_item)
         
+        # Go to Line
+        goto_item = Gtk.MenuItem(label="_Go to Line", use_underline=True)
+        goto_item.connect("activate", self._on_goto_line)
+        edit_menu.append(goto_item)
+        
         # View menu
         view_menu = Gtk.Menu()
         view_item = Gtk.MenuItem(label="_View", use_underline=True)
@@ -437,33 +442,309 @@ class MainWindow(Gtk.Window, EventMixin):
     
     def _on_cut(self, widget) -> None:
         """Handle cut request."""
-        # TODO: Implement cut
-        pass
+        page = self._editor_notebook.get_current_page()
+        editor = self._editor_notebook.get_nth_page(page)
+        if editor and hasattr(editor, '_view'):
+            clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            editor._view.get_buffer().cut_clipboard(clipboard, True)
     
     def _on_copy(self, widget) -> None:
         """Handle copy request."""
-        # TODO: Implement copy
-        pass
+        page = self._editor_notebook.get_current_page()
+        editor = self._editor_notebook.get_nth_page(page)
+        if editor and hasattr(editor, '_view'):
+            clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            editor._view.get_buffer().copy_clipboard(clipboard)
     
     def _on_paste(self, widget) -> None:
         """Handle paste request."""
-        # TODO: Implement paste
-        pass
+        page = self._editor_notebook.get_current_page()
+        editor = self._editor_notebook.get_nth_page(page)
+        if editor and hasattr(editor, '_view'):
+            clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            editor._view.get_buffer().paste_clipboard(clipboard, None, True)
     
     def _on_find(self, widget) -> None:
         """Handle find/replace request."""
-        # TODO: Implement find/replace dialog
-        pass
+        self._show_find_replace_dialog()
+    
+    def _show_find_replace_dialog(self) -> None:
+        """Show find/replace dialog."""
+        dialog = Gtk.Dialog(
+            title="Find and Replace",
+            transient_for=self,
+            modal=False
+        )
+        dialog.set_default_size(400, 200)
+        
+        # Get content area
+        content = dialog.get_content_area()
+        content.set_spacing(6)
+        content.set_margin_top(12)
+        content.set_margin_bottom(12)
+        content.set_margin_start(12)
+        content.set_margin_end(12)
+        
+        # Search entry
+        search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        content.add(search_box)
+        search_label = Gtk.Label(label="Find:")
+        search_box.add(search_label)
+        self._find_entry = Gtk.Entry()
+        self._find_entry.set_hexpand(True)
+        search_box.add(self._find_entry)
+        
+        # Replace entry
+        replace_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        content.add(replace_box)
+        replace_label = Gtk.Label(label="Replace:")
+        replace_box.add(replace_label)
+        self._replace_entry = Gtk.Entry()
+        self._replace_entry.set_hexpand(True)
+        replace_box.add(self._replace_entry)
+        
+        # Buttons
+        button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        button_box.set_homogeneous(True)
+        content.add(button_box)
+        
+        find_btn = Gtk.Button(label="Find Next")
+        find_btn.connect("clicked", self._on_find_next)
+        button_box.add(find_btn)
+        
+        replace_btn = Gtk.Button(label="Replace")
+        replace_btn.connect("clicked", self._on_replace)
+        button_box.add(replace_btn)
+        
+        replace_all_btn = Gtk.Button(label="Replace All")
+        replace_all_btn.connect("clicked", self._on_replace_all)
+        button_box.add(replace_all_btn)
+        
+        close_btn = Gtk.Button(label="Close")
+        close_btn.connect("clicked", lambda w: dialog.destroy())
+        button_box.add(close_btn)
+        
+        content.show_all()
+        dialog.show()
+        self._find_dialog = dialog
+    
+    def _on_find_next(self, widget) -> None:
+        """Find next occurrence."""
+        if not self._current_document:
+            return
+        
+        search_text = self._find_entry.get_text()
+        if not search_text:
+            return
+        
+        # Get current editor
+        page = self._editor_notebook.get_current_page()
+        editor = self._editor_notebook.get_nth_page(page)
+        if not editor or not hasattr(editor, '_view'):
+            return
+        
+        buffer = editor._buffer
+        cursor = buffer.get_insert()
+        start_iter = buffer.get_iter_at_mark(cursor)
+        
+        # Search forward
+        found = start_iter.forward_search(search_text, 0, None)
+        if found:
+            match_start, match_end = found
+            buffer.select_range(match_start, match_end)
+            editor._view.scroll_to_mark(buffer.get_insert(), 0.25, True, 0.5, 0.5)
+    
+    def _on_replace(self, widget) -> None:
+        """Replace current occurrence."""
+        if not self._current_document:
+            return
+        
+        search_text = self._find_entry.get_text()
+        replace_text = self._replace_entry.get_text()
+        
+        if not search_text:
+            return
+        
+        # Get current editor
+        page = self._editor_notebook.get_current_page()
+        editor = self._editor_notebook.get_nth_page(page)
+        if not editor or not hasattr(editor, '_buffer'):
+            return
+        
+        buffer = editor._buffer
+        
+        # Check if there's a selection
+        if buffer.get_has_selection():
+            start, end = buffer.get_selection_bounds()
+            selected = buffer.get_text(start, end, True)
+            if selected == search_text:
+                buffer.delete(start, end)
+                buffer.insert(start, replace_text)
+                # Find next
+                self._on_find_next(widget)
+    
+    def _on_replace_all(self, widget) -> None:
+        """Replace all occurrences."""
+        if not self._current_document:
+            return
+        
+        search_text = self._find_entry.get_text()
+        replace_text = self._replace_entry.get_text()
+        
+        if not search_text:
+            return
+        
+        # Use document's replace method
+        count = 0
+        pos = 0
+        while True:
+            new_pos = self._current_document.replace(search_text, replace_text, pos)
+            if new_pos == -1:
+                break
+            count += 1
+            pos = new_pos + len(replace_text)
+        
+        # Reload editor content
+        page = self._editor_notebook.get_current_page()
+        editor = self._editor_notebook.get_nth_page(page)
+        if editor and hasattr(editor, '_buffer'):
+            editor._buffer.set_text(self._current_document.content)
+        
+        self._show_info(f"Replaced {count} occurrences")
+    
+    def _on_goto_line(self, widget) -> None:
+        """Handle goto line request."""
+        if not self._current_document:
+            return
+        
+        page = self._editor_notebook.get_current_page()
+        editor = self._editor_notebook.get_nth_page(page)
+        if not editor or not hasattr(editor, '_buffer'):
+            return
+        
+        # Get total line count
+        buffer = editor._buffer
+        total_lines = buffer.get_line_count()
+        
+        # Create dialog
+        dialog = Gtk.Dialog(title="Goto Line", transient_for=self, modal=True)
+        dialog.add_button("Cancel", Gtk.ResponseType.CANCEL)
+        dialog.add_button("Go", Gtk.ResponseType.OK)
+        dialog.set_default_response(Gtk.ResponseType.OK)
+        dialog.set_default_size(250, 100)
+        
+        content = dialog.get_content_area()
+        content.set_spacing(6)
+        content.set_border_width(12)
+        
+        label = Gtk.Label(label=f"Enter line number (1-{total_lines}):")
+        content.add(label)
+        
+        spin = Gtk.SpinButton.new_with_range(1, total_lines, 1)
+        spin.set_numeric(True)
+        # Set current line as default
+        cursor_iter = buffer.get_iter_at_mark(buffer.get_insert())
+        current_line = cursor_iter.get_line() + 1
+        spin.set_value(current_line)
+        content.add(spin)
+        
+        content.show_all()
+        spin.grab_focus()
+        
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            line_num = int(spin.get_value()) - 1  # 0-indexed
+            editor.goto_line(line_num, 0)
+        
+        dialog.destroy()
     
     def _on_toggle_line_numbers(self, widget) -> None:
         """Handle line numbers toggle."""
-        # TODO: Toggle line numbers in current editor
-        pass
+        page = self._editor_notebook.get_current_page()
+        editor = self._editor_notebook.get_nth_page(page)
+        if not editor or not hasattr(editor, '_view'):
+            return
+        
+        # Toggle line numbers visibility
+        current = editor._view.get_show_line_numbers()
+        editor._view.set_show_line_numbers(not current)
     
     def _on_regex_toolkit(self, widget) -> None:
         """Handle regex toolkit request."""
-        # TODO: Open regex toolkit dialog
-        pass
+        dialog = Gtk.Dialog(title="Regex Toolkit", transient_for=self, modal=False)
+        dialog.set_default_size(500, 400)
+        dialog.add_button("Close", Gtk.ResponseType.CLOSE)
+        
+        content = dialog.get_content_area()
+        content.set_spacing(6)
+        content.set_border_width(12)
+        
+        # Pattern entry
+        pattern_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        pattern_box.add(Gtk.Label(label="Pattern:"))
+        pattern_entry = Gtk.Entry()
+        pattern_entry.set_placeholder_text("Enter regex pattern...")
+        pattern_box.pack_start(pattern_entry, True, True, 0)
+        content.add(pattern_box)
+        
+        # Test text view
+        content.add(Gtk.Label(label="Test Text:"))
+        test_scroll = Gtk.ScrolledWindow()
+        test_scroll.set_size_request(-1, 120)
+        test_buffer = Gtk.TextBuffer()
+        test_view = Gtk.TextView.new_with_buffer(test_buffer)
+        test_scroll.add(test_view)
+        content.add(test_scroll)
+        
+        # Result label
+        result_label = Gtk.Label(label="Enter pattern and test text")
+        result_label.set_line_wrap(True)
+        content.add(result_label)
+        
+        # Matches list
+        content.add(Gtk.Label(label="Matches:"))
+        matches_store = Gtk.ListStore(str, str)
+        matches_tree = Gtk.TreeView(model=matches_store)
+        matches_tree.append_column(Gtk.TreeViewColumn("Position", Gtk.CellRendererText(), text=0))
+        matches_tree.append_column(Gtk.TreeViewColumn("Match", Gtk.CellRendererText(), text=1))
+        matches_scroll = Gtk.ScrolledWindow()
+        matches_scroll.set_size_request(-1, 100)
+        matches_scroll.add(matches_tree)
+        content.add(matches_scroll)
+        
+        def on_pattern_changed(*args):
+            pattern = pattern_entry.get_text()
+            test_text = test_buffer.get_text(
+                test_buffer.get_start_iter(),
+                test_buffer.get_end_iter(),
+                False
+            )
+            matches_store.clear()
+            
+            if not pattern or not test_text:
+                result_label.set_text("Enter pattern and test text")
+                return
+            
+            try:
+                import re
+                regex = re.compile(pattern)
+                matches = list(regex.finditer(test_text))
+                
+                if matches:
+                    result_label.set_text(f"Found {len(matches)} match(es)")
+                    for m in matches:
+                        matches_store.append([f"{m.start()}-{m.end()}", m.group()])
+                else:
+                    result_label.set_text("No matches found")
+            except re.error as e:
+                result_label.set_text(f"Invalid regex: {e}")
+        
+        pattern_entry.connect("changed", on_pattern_changed)
+        test_buffer.connect("changed", on_pattern_changed)
+        
+        content.show_all()
+        dialog.run()
+        dialog.destroy()
     
     def _on_word_count(self, widget) -> None:
         """Handle word count request."""
@@ -477,7 +758,7 @@ class MainWindow(Gtk.Window, EventMixin):
         """Handle about request."""
         dialog = Gtk.AboutDialog(transient_for=self)
         dialog.set_program_name("helloed")
-        dialog.set_version("7.0.0")
+        dialog.set_version("8.0.0")
         dialog.set_copyright("Copyright © 2026 Ahmed Youssef")
         dialog.set_license_type(Gtk.License.GPL_2_0)
         dialog.set_website("https://github.com/xmonader/helloed")
@@ -506,6 +787,14 @@ class MainWindow(Gtk.Window, EventMixin):
             # Ctrl+S: Save
             elif event.keyval == Gdk.KEY_s:
                 self._on_save(widget)
+                return True
+            # Ctrl+F: Find
+            elif event.keyval == Gdk.KEY_f:
+                self._show_find_replace_dialog()
+                return True
+            # Ctrl+G: Goto Line
+            elif event.keyval == Gdk.KEY_g:
+                self._on_goto_line(widget)
                 return True
         
         return False
