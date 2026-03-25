@@ -124,6 +124,73 @@ class MainWindow(Gtk.Window, EventMixin):
         quit_item = Gtk.MenuItem(label="_Quit", use_underline=True)
         quit_item.connect("activate", self._on_quit)
         file_menu.append(quit_item)
+        
+        # Edit menu
+        edit_menu = Gtk.Menu()
+        edit_item = Gtk.MenuItem(label="_Edit", use_underline=True)
+        edit_item.set_submenu(edit_menu)
+        menubar.append(edit_item)
+        
+        # Cut
+        cut_item = Gtk.MenuItem(label="Cu_t", use_underline=True)
+        cut_item.connect("activate", self._on_cut)
+        edit_menu.append(cut_item)
+        
+        # Copy
+        copy_item = Gtk.MenuItem(label="_Copy", use_underline=True)
+        copy_item.connect("activate", self._on_copy)
+        edit_menu.append(copy_item)
+        
+        # Paste
+        paste_item = Gtk.MenuItem(label="_Paste", use_underline=True)
+        paste_item.connect("activate", self._on_paste)
+        edit_menu.append(paste_item)
+        
+        edit_menu.append(Gtk.SeparatorMenuItem())
+        
+        # Find/Replace
+        find_item = Gtk.MenuItem(label="_Find/Replace", use_underline=True)
+        find_item.connect("activate", self._on_find)
+        edit_menu.append(find_item)
+        
+        # View menu
+        view_menu = Gtk.Menu()
+        view_item = Gtk.MenuItem(label="_View", use_underline=True)
+        view_item.set_submenu(view_menu)
+        menubar.append(view_item)
+        
+        # Line numbers toggle
+        line_nums_item = Gtk.CheckMenuItem(label="Show _Line Numbers")
+        line_nums_item.set_active(True)
+        line_nums_item.connect("toggled", self._on_toggle_line_numbers)
+        view_menu.append(line_nums_item)
+        
+        # Tools menu
+        tools_menu = Gtk.Menu()
+        tools_item = Gtk.MenuItem(label="_Tools", use_underline=True)
+        tools_item.set_submenu(tools_menu)
+        menubar.append(tools_item)
+        
+        # Regex Toolkit
+        regex_item = Gtk.MenuItem(label="_Regex Toolkit", use_underline=True)
+        regex_item.connect("activate", self._on_regex_toolkit)
+        tools_menu.append(regex_item)
+        
+        # Word Count
+        wc_item = Gtk.MenuItem(label="_Word Count", use_underline=True)
+        wc_item.connect("activate", self._on_word_count)
+        tools_menu.append(wc_item)
+        
+        # Help menu
+        help_menu = Gtk.Menu()
+        help_item = Gtk.MenuItem(label="_Help", use_underline=True)
+        help_item.set_submenu(help_menu)
+        menubar.append(help_item)
+        
+        # About
+        about_item = Gtk.MenuItem(label="_About", use_underline=True)
+        about_item.connect("activate", self._on_about)
+        help_menu.append(about_item)
     
     def _build_toolbar(self, parent: Gtk.Box) -> None:
         """Build toolbar."""
@@ -368,6 +435,56 @@ class MainWindow(Gtk.Window, EventMixin):
         else:
             self.destroy()
     
+    def _on_cut(self, widget) -> None:
+        """Handle cut request."""
+        # TODO: Implement cut
+        pass
+    
+    def _on_copy(self, widget) -> None:
+        """Handle copy request."""
+        # TODO: Implement copy
+        pass
+    
+    def _on_paste(self, widget) -> None:
+        """Handle paste request."""
+        # TODO: Implement paste
+        pass
+    
+    def _on_find(self, widget) -> None:
+        """Handle find/replace request."""
+        # TODO: Implement find/replace dialog
+        pass
+    
+    def _on_toggle_line_numbers(self, widget) -> None:
+        """Handle line numbers toggle."""
+        # TODO: Toggle line numbers in current editor
+        pass
+    
+    def _on_regex_toolkit(self, widget) -> None:
+        """Handle regex toolkit request."""
+        # TODO: Open regex toolkit dialog
+        pass
+    
+    def _on_word_count(self, widget) -> None:
+        """Handle word count request."""
+        if self._current_document:
+            wc = self._current_document.word_count
+            lines = self._current_document.line_count
+            chars = self._current_document.char_count
+            self._show_info(f"Words: {wc}\nLines: {lines}\nCharacters: {chars}")
+    
+    def _on_about(self, widget) -> None:
+        """Handle about request."""
+        dialog = Gtk.AboutDialog(transient_for=self)
+        dialog.set_program_name("helloed")
+        dialog.set_version("7.0.0")
+        dialog.set_copyright("Copyright © 2026 Ahmed Youssef")
+        dialog.set_license_type(Gtk.License.GPL_2_0)
+        dialog.set_website("https://github.com/xmonader/helloed")
+        dialog.set_comments("A Python 3/GTK3 text editor with syntax highlighting")
+        dialog.run()
+        dialog.destroy()
+    
     def _on_destroy(self, widget) -> None:
         """Handle window destroy."""
         logger.debug("MainWindow destroyed")
@@ -404,6 +521,18 @@ class MainWindow(Gtk.Window, EventMixin):
             transient_for=self,
             modal=True,
             message_type=Gtk.MessageType.ERROR,
+            buttons=Gtk.ButtonsType.OK,
+            text=message
+        )
+        dialog.run()
+        dialog.destroy()
+    
+    def _show_info(self, message: str) -> None:
+        """Show info dialog."""
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            modal=True,
+            message_type=Gtk.MessageType.INFO,
             buttons=Gtk.ButtonsType.OK,
             text=message
         )
