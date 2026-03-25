@@ -13,3 +13,9 @@ lxml>=4.5.0
 # Note: gtksourceview is a system library installed via package manager
 # Ubuntu/Debian: gir1.2-gtksource-4
 # Fedora: gtksourceview4
+
+# Optional development dependencies (install with: pip install -r requirements-dev.txt)
+# - black
+# - flake8
+# - pytest
+# - sphinx

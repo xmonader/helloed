@@ -1,7 +1,7 @@
 # Makefile for helloed - Python 3/GTK3 text editor
 # https://github.com/xmonader/helloed
 
-.PHONY: help venv install install-dev run clean lint format test check build dist
+.PHONY: help venv install install-dev run clean lint format test check build dist docs docs-serve
 
 # Virtual environment settings
 VENV_DIR ?= .venv
@@ -30,6 +30,10 @@ help:
 	@echo "  make format         - Format code with black"
 	@echo "  make format-check   - Check code formatting"
 	@echo "  make check          - Run syntax check"
+	@echo ""
+	@echo "Documentation:"
+	@echo "  make docs           - Build documentation"
+	@echo "  make docs-serve     - Serve docs locally"
 	@echo ""
 	@echo "Building:"
 	@echo "  make build          - Build Python package"
@@ -73,15 +77,15 @@ install:
 
 # Install development dependencies
 install-dev: install
-	$(PIP) install black flake8 pylint pytest pytest-cov
+	$(PIP) install black flake8 pylint pytest pytest-cov sphinx sphinx-rtd-theme
 
 # Run the application
 run:
-	cd $(SRC_DIR) && $(PYTHON) hello.py $(FILE)
+	cd $(SRC_DIR) && $(PYTHON) -m helloed $(ARGS)
 
 # Run with GTK debugging
 run-debug:
-	GTK_DEBUG=interactive cd $(SRC_DIR) && $(PYTHON) hello.py $(FILE)
+	GTK_DEBUG=interactive cd $(SRC_DIR) && $(PYTHON) -m helloed $(ARGS)
 
 # Clean generated files (but keep venv by default)
 clean:
@@ -91,6 +95,7 @@ clean:
 	find . -type f -name "*~" -delete 2>/dev/null || true
 	find . -type f -name "*.bak" -delete 2>/dev/null || true
 	rm -rf build/ dist/ *.egg-info/ .pytest_cache/ .mypy_cache/ .coverage
+	rm -rf docs/_build/
 
 # Clean everything including venv
 clean-all: clean venv-clean
@@ -126,6 +131,17 @@ test:
 # Run tests with coverage
 test-cov:
 	$(PYTHON) -m pytest tests/ -v --cov=$(SRC_DIR) --cov-report=term-missing
+
+# Build documentation
+docs:
+	@echo "Building documentation..."
+	cd docs && $(PYTHON) -m sphinx.cmd.build -b html . _build/html
+	@echo "Documentation built in docs/_build/html"
+
+# Serve documentation locally
+docs-serve: docs
+	@echo "Serving documentation at http://localhost:8000"
+	cd docs/_build/html && $(PYTHON) -m http.server 8000
 
 # Install system dependencies (Ubuntu/Debian)
 setup:
