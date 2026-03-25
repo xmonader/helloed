@@ -5,12 +5,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "helloed"
 version = "7.0.0"
-description = "A PyGTK/PyGObject text editor with syntax highlighting"
+description = "A Python 3/GTK3 text editor with syntax highlighting"
 readme = "README.md"
 license = {text = "GPL-2.0-or-later"}
 authors = [
     {name = "Ahmed Youssef", email = "xmonader@gmail.com"}
 ]
+maintainers = [
+    {name = "Ahmed Youssef", email = "xmonader@gmail.com"}
+]
+keywords = ["text-editor", "gtk", "python", "gui", "code-editor"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: X11 Applications :: GTK",
@@ -23,7 +27,9 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Editors",
+    "Topic :: Text Editors",
 ]
 requires-python = ">=3.8"
 dependencies = [
@@ -31,12 +37,42 @@ dependencies = [
     "lxml>=4.5.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "black>=22.0",
+    "flake8>=4.0",
+    "pytest>=7.0",
+    "pytest-cov>=3.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/xmonader/helloed"
 Repository = "https://github.com/xmonader/helloed"
+Issues = "https://github.com/xmonader/helloed/issues"
+Changelog = "https://github.com/xmonader/helloed/blob/master/CHANGELOG.md"
 
 [project.scripts]
 helloed = "hello:main"
 
 [tool.setuptools]
 packages = ["src"]
+
+[tool.black]
+line-length = 120
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

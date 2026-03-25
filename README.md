@@ -1,32 +1,37 @@
 # helloed
 
-A Python 3 / GTK3 text editor with syntax highlighting, file browser, regex toolkit, and integrated terminal.
+[![CI](https://github.com/xmonader/helloed/actions/workflows/ci.yml/badge.svg)](https://github.com/xmonader/helloed/actions/workflows/ci.yml)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![GTK3](https://img.shields.io/badge/GTK-3.0+-green.svg)](https://gtk.org/)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+
+A Python 3/GTK3 text editor with syntax highlighting, file browser, and integrated tools.
+
+![helloed screenshot](docs/screenshot.png)
 
 ## Features
 
-- **Syntax Highlighting** - Powered by gtksourceview4
-- **File Browser** - Built-in file browser with navigation
+- **Syntax Highlighting** - Powered by GtkSourceView 4
+- **File Browser** - Built-in file browser with directory navigation
 - **Regex Toolkit** - Test and debug regular expressions
-- **Integrated Terminal** - VTE-based terminal (requires vte system package)
 - **Code Navigation** - Python source code tree viewer
 - **XML Viewer** - Visualize XML document structure
 - **Find/Replace** - Advanced search and replace functionality
 - **Go to Line** - Quick line navigation
 - **Word Count** - Document statistics
+- **Paster Widget** - Upload code snippets to 0x0.st or save locally
 
 ## Requirements
 
 - Python 3.8+
 - GTK 3.0+
-- GObject Introspection (gi)
-- gtksourceview 4.x
-- VTE 2.91 (optional, for terminal support)
+- GObject Introspection
+- GtkSourceView 4
+- (Optional) VTE 2.91 for integrated terminal
 
 ## Installation
 
 ### System Dependencies (Ubuntu/Debian)
-
-GTK3 and GObject introspection are required at the system level:
 
 ```bash
 sudo apt-get install python3-gi python3-gi-cairo gir1.2-gtk-3.0 \
@@ -44,79 +49,98 @@ make setup-fedora  # Fedora
 ### Using Virtual Environment (Recommended)
 
 ```bash
-# Create virtual environment
+# Full setup
+make venv install run
+
+# Step by step
 make venv
-
-# Activate it (optional - Makefile will auto-detect)
-source .venv/bin/activate
-
-# Install Python dependencies in venv
 make install
-
-# Run the application
 make run
-# Or with a specific file
+```
+
+### Without Virtual Environment
+
+```bash
+pip3 install --user -r requirements.txt
+python3 src/hello.py
+```
+
+## Usage
+
+```bash
+# Run the editor
+make run
+
+# Open a specific file
 make run FILE=/path/to/file.py
 ```
 
-### Without Virtual Environment (System Python)
+## Development
 
 ```bash
-# Install Python dependencies globally
-pip3 install --user -r requirements.txt
+# Setup development environment
+make install-dev
 
-# Run directly
-python3 src/hello.py
-# Or open a specific file
-python3 src/hello.py /path/to/file.py
-```
+# Run tests
+make test
 
-### Makefile Targets
+# Check code formatting
+make format-check
 
-```bash
-make help           # Show all available targets
-make install        # Install Python dependencies
-make install-dev    # Install dev dependencies (black, flake8, etc.)
-make run            # Run the application
-make run-debug      # Run with GTK inspector enabled
-make check          # Check Python syntax
-make clean          # Clean generated files
-make setup          # Install system deps (Ubuntu/Debian)
-make lint           # Run linters
-make format         # Format code with black
+# Format code
+make format
+
+# Run linters
+make lint
 ```
 
 ## Project Structure
 
 ```
-src/
-├── hello.py              # Main entry point
-├── widgets.py            # Custom GTK widgets
-├── pyconsole.py          # Interactive Python console
-├── terminal.py           # VTE terminal widget
-├── gregextoolkitdialog.py  # Regex toolkit dialog
-├── regextoolkitlib.py    # Regex utilities
-├── regexlibapis.py       # Regex library API client
-├── myhappymapper.py      # XML/HTML parser
-└── ui/                   # Glade UI files
-    ├── hello.glade
-    └── gregextoolkitdialog.glade
+helloed/
+├── src/                    # Source code
+│   ├── hello.py           # Main entry point
+│   ├── widgets.py         # Custom GTK widgets
+│   ├── pyconsole.py       # Interactive Python console
+│   ├── terminal.py        # VTE terminal widget
+│   ├── gregextoolkitdialog.py  # Regex toolkit
+│   ├── regextoolkitlib.py # Regex utilities
+│   ├── myhappymapper.py   # XML/HTML parser
+│   └── ui/                # Glade UI files
+├── tests/                 # Test suite
+├── docs/                  # Documentation
+├── .github/workflows/     # CI/CD configuration
+├── Makefile              # Build automation
+├── requirements.txt      # Python dependencies
+├── pyproject.toml        # Project metadata
+├── README.md             # This file
+├── CONTRIBUTING.md       # Contribution guidelines
+├── CODE_OF_CONDUCT.md    # Community standards
+├── CHANGELOG.md          # Version history
+└── LICENSE               # GPL v2 license
 ```
 
-## Migration Notes
+## Contributing
 
-This project was originally written for Python 2 and PyGTK (GTK 2). It has been modernized to use:
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to this project.
 
-- **Python 3.8+** - Modern Python with type hints support
-- **PyGObject (GTK 3)** - GObject introspection instead of PyGTK
-- **gtksourceview 4** - Modern source editing component
-- **urllib.request** - Python 3 HTTP client
-- **html.parser** - Modern HTML parsing
+## Code of Conduct
+
+This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a history of changes.
 
 ## License
 
-GPL-2.0-or-later - See LICENSE file for details.
+This project is licensed under the GPL-2.0-or-later License - see the [LICENSE](LICENSE) file for details.
 
-## Author
+## Acknowledgments
 
-Ahmed Youssef <xmonader@gmail.com>
+- Original author: Ahmed Youssef (xmonader@gmail.com)
+- Thanks to all contributors
+
+---
+
+**Note:** This project was originally written for Python 2/PyGTK and has been modernized to Python 3/GTK3.
