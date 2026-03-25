@@ -173,14 +173,64 @@ class MainWindow(Gtk.Window, EventMixin):
         self._vpaned.pack1(self._editor_notebook, True, False)
     
     def _build_bottom_panel(self) -> None:
-        """Build bottom panel."""
-        bottom_notebook = Gtk.Notebook()
-        self._vpaned.pack2(bottom_notebook, False, False)
+        """Build bottom panel with terminal, console, scribble, paster."""
+        self._bottom_notebook = Gtk.Notebook()
+        self._vpaned.pack2(self._bottom_notebook, False, False)
         self._vpaned.set_position(500)
         
-        # Add terminal or console
-        label = Gtk.Label(label="Terminal not available")
-        bottom_notebook.append_page(label, Gtk.Label(label="Terminal"))
+        # Terminal
+        try:
+            import sys
+            sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+            from terminal import GeditTerminal
+            self._terminal = GeditTerminal()
+            self._bottom_notebook.append_page(
+                self._terminal, 
+                Gtk.Label(label="Terminal")
+            )
+        except Exception as e:
+            logger.warning("Terminal not available: %s", e)
+            label = Gtk.Label(label="Terminal not available\n(install vte/gir1.2-vte)")
+            self._bottom_notebook.append_page(label, Gtk.Label(label="Terminal"))
+        
+        # Python Console
+        try:
+            import sys
+            sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+            from pyconsole import Console
+            self._console = Console()
+            self._bottom_notebook.append_page(
+                self._console,
+                Gtk.Label(label="Python Console")
+            )
+        except Exception as e:
+            logger.warning("Python console not available: %s", e)
+            label = Gtk.Label(label="Console not available")
+            self._bottom_notebook.append_page(label, Gtk.Label(label="Console"))
+        
+        # Scribble pad
+        scrolled = Gtk.ScrolledWindow()
+        self._scribble = Gtk.TextView()
+        scrolled.add(self._scribble)
+        self._bottom_notebook.append_page(
+            scrolled,
+            Gtk.Label(label="Scribble")
+        )
+        
+        # Paster widget
+        try:
+            import sys
+            sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+            from widgets import PasterWidget
+            scrolled = Gtk.ScrolledWindow()
+            self._paster = PasterWidget()
+            scrolled.add(self._paster)
+            self._bottom_notebook.append_page(
+                scrolled,
+                Gtk.Label(label="Paster")
+            )
+        except Exception as e:
+            logger.warning("Paster widget not available: %s", e)
     
     def _connect_signals(self) -> None:
         """Connect signal handlers."""
