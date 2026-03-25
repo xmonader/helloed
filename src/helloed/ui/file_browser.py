@@ -46,17 +46,23 @@ class FileBrowser(Gtk.Box):
         self.pack_start(toolbar, False, False, 0)
         
         # Up button
-        up_btn = Gtk.ToolButton(stock_id="gtk-go-up")
+        up_btn = Gtk.ToolButton(label="Up")
+        up_btn.set_icon_name("go-up")
+        up_btn.set_tooltip_text("Go to parent directory")
         up_btn.connect("clicked", self._on_go_up)
         toolbar.insert(up_btn, -1)
         
         # Home button
-        home_btn = Gtk.ToolButton(stock_id="gtk-home")
+        home_btn = Gtk.ToolButton(label="Home")
+        home_btn.set_icon_name("go-home")
+        home_btn.set_tooltip_text("Go to home directory")
         home_btn.connect("clicked", self._on_go_home)
         toolbar.insert(home_btn, -1)
         
         # Refresh button
-        refresh_btn = Gtk.ToolButton(stock_id="gtk-refresh")
+        refresh_btn = Gtk.ToolButton(label="Refresh")
+        refresh_btn.set_icon_name("view-refresh")
+        refresh_btn.set_tooltip_text("Refresh file list")
         refresh_btn.connect("clicked", lambda _: self._refresh())
         toolbar.insert(refresh_btn, -1)
         
@@ -70,7 +76,7 @@ class FileBrowser(Gtk.Box):
         # Columns
         # Icon column
         icon_renderer = Gtk.CellRendererPixbuf()
-        icon_col = Gtk.TreeViewColumn("", icon_renderer, stock_id=0)
+        icon_col = Gtk.TreeViewColumn("", icon_renderer, icon_name=0)
         self._treeview.append_column(icon_col)
         
         # Name column
@@ -93,7 +99,7 @@ class FileBrowser(Gtk.Box):
         try:
             # Add parent directory
             if self._current_path != Path("/"):
-                self._store.append(["gtk-go-up", "..", str(self._current_path.parent)])
+                self._store.append(["go-up", "..", str(self._current_path.parent)])
             
             # List directory contents
             entries = sorted(self._current_path.iterdir(), 
@@ -103,7 +109,8 @@ class FileBrowser(Gtk.Box):
                 if entry.is_dir():
                     icon = "folder"
                 else:
-                    icon = "text-x-generic"
+                    # Try to get specific icon based on mime type
+                    icon = self._get_file_icon(entry)
                 
                 self._store.append([icon, entry.name, str(entry)])
             
@@ -113,6 +120,50 @@ class FileBrowser(Gtk.Box):
             logger.warning("Permission denied: %s", self._current_path)
         except Exception as e:
             logger.error("Failed to list directory: %s", e)
+    
+    def _get_file_icon(self, entry: Path) -> str:
+        """Get appropriate icon name for file type.
+        
+        Args:
+            entry: File path
+            
+        Returns:
+            Icon name
+        """
+        if entry.is_dir():
+            return "folder"
+        
+        # Map extensions to icons
+        ext_map = {
+            '.py': 'text-x-python',
+            '.js': 'text-x-javascript',
+            '.html': 'text-html',
+            '.htm': 'text-html',
+            '.css': 'text-css',
+            '.c': 'text-x-c',
+            '.cpp': 'text-x-c++',
+            '.h': 'text-x-c',
+            '.hpp': 'text-x-c++',
+            '.java': 'text-x-java',
+            '.rb': 'application-x-ruby',
+            '.php': 'application-x-php',
+            '.go': 'text-x-go',
+            '.rs': 'text-x-rust',
+            '.md': 'text-x-markdown',
+            '.txt': 'text-plain',
+            '.json': 'application-json',
+            '.xml': 'application-xml',
+            '.sh': 'application-x-shellscript',
+            '.pdf': 'application-pdf',
+            '.png': 'image-png',
+            '.jpg': 'image-jpeg',
+            '.jpeg': 'image-jpeg',
+            '.gif': 'image-gif',
+            '.svg': 'image-svg+xml',
+        }
+        
+        ext = entry.suffix.lower()
+        return ext_map.get(ext, 'text-x-generic')
     
     def set_path(self, path: Path) -> None:
         """Set current path.
