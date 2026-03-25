@@ -46,22 +46,22 @@ class FileBrowser(Gtk.Box):
         self.pack_start(toolbar, False, False, 0)
         
         # Up button
-        up_btn = Gtk.ToolButton(label="Up")
-        up_btn.set_icon_name("go-up")
+        up_icon = Gtk.Image.new_from_icon_name("go-up", Gtk.IconSize.SMALL_TOOLBAR)
+        up_btn = Gtk.ToolButton(label="Up", icon_widget=up_icon)
         up_btn.set_tooltip_text("Go to parent directory")
         up_btn.connect("clicked", self._on_go_up)
         toolbar.insert(up_btn, -1)
         
         # Home button
-        home_btn = Gtk.ToolButton(label="Home")
-        home_btn.set_icon_name("go-home")
+        home_icon = Gtk.Image.new_from_icon_name("go-home", Gtk.IconSize.SMALL_TOOLBAR)
+        home_btn = Gtk.ToolButton(label="Home", icon_widget=home_icon)
         home_btn.set_tooltip_text("Go to home directory")
         home_btn.connect("clicked", self._on_go_home)
         toolbar.insert(home_btn, -1)
         
         # Refresh button
-        refresh_btn = Gtk.ToolButton(label="Refresh")
-        refresh_btn.set_icon_name("view-refresh")
+        refresh_icon = Gtk.Image.new_from_icon_name("view-refresh", Gtk.IconSize.SMALL_TOOLBAR)
+        refresh_btn = Gtk.ToolButton(label="Refresh", icon_widget=refresh_icon)
         refresh_btn.set_tooltip_text("Refresh file list")
         refresh_btn.connect("clicked", lambda _: self._refresh())
         toolbar.insert(refresh_btn, -1)
@@ -76,7 +76,9 @@ class FileBrowser(Gtk.Box):
         # Columns
         # Icon column
         icon_renderer = Gtk.CellRendererPixbuf()
+        # Use gicon instead of icon_name for better theme support
         icon_col = Gtk.TreeViewColumn("", icon_renderer, icon_name=0)
+        icon_col.set_fixed_width(24)
         self._treeview.append_column(icon_col)
         
         # Name column

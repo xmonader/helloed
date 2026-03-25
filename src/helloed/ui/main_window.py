@@ -131,22 +131,22 @@ class MainWindow(Gtk.Window, EventMixin):
         parent.pack_start(toolbar, False, False, 0)
         
         # New button
-        new_btn = Gtk.ToolButton(label="New")
-        new_btn.set_icon_name("document-new")
+        new_icon = Gtk.Image.new_from_icon_name("document-new", Gtk.IconSize.LARGE_TOOLBAR)
+        new_btn = Gtk.ToolButton(label="New", icon_widget=new_icon)
         new_btn.set_tooltip_text("Create new document")
         new_btn.connect("clicked", self._on_new)
         toolbar.insert(new_btn, -1)
         
         # Open button
-        open_btn = Gtk.ToolButton(label="Open")
-        open_btn.set_icon_name("document-open")
+        open_icon = Gtk.Image.new_from_icon_name("document-open", Gtk.IconSize.LARGE_TOOLBAR)
+        open_btn = Gtk.ToolButton(label="Open", icon_widget=open_icon)
         open_btn.set_tooltip_text("Open file")
         open_btn.connect("clicked", self._on_open)
         toolbar.insert(open_btn, -1)
         
         # Save button
-        save_btn = Gtk.ToolButton(label="Save")
-        save_btn.set_icon_name("document-save")
+        save_icon = Gtk.Image.new_from_icon_name("document-save", Gtk.IconSize.LARGE_TOOLBAR)
+        save_btn = Gtk.ToolButton(label="Save", icon_widget=save_icon)
         save_btn.set_tooltip_text("Save document")
         save_btn.connect("clicked", self._on_save)
         toolbar.insert(save_btn, -1)
