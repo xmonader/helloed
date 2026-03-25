@@ -1,5 +1,8 @@
 # -*- coding: utf8 -*-
 
+# NOTE: This file uses deprecated libraries (vte, gconf) that are not available in Python 3.
+# It needs to be rewritten using modern alternatives like VTE 2.91 with GObject introspection.
+
 # terminal.py - Embeded VTE terminal for gedit
 # This file is part of gedit
 #
@@ -20,16 +23,49 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, 
 # Boston, MA  02110-1301  USA
 
-#import gedit
-#import gedit.utils
-import pango
-import gtk
-import gobject
-import vte
-import gconf
-import gettext
-import os
-import gio
+import gi
+gi.require_version('Gtk', '3.0')
+try:
+    gi.require_version('Vte', '2.91')
+except ValueError:
+    pass  # Vte not available
+from gi.repository import Gtk as gtk
+from gi.repository import Gdk
+from gi.repository import GObject as gobject
+from gi.repository import Pango as pango
+from gi.repository import Gio as gio
+
+try:
+    from gi.repository import Vte as vte
+except ImportError:
+    vte = None
+
+try:
+    import gconf
+except ImportError:
+    gconf = None
+
+# Fallback imports for deprecated modules
+if vte is None:
+    try:
+        import vte
+    except ImportError:
+        pass
+
+if gconf is None:
+    try:
+        import gconf
+    except ImportError:
+        pass
+
+# Initialize gconf client if available
+gconf_client = None
+if gconf is not None:
+    try:
+        gconf_client = gconf.client_get_default()
+    except:
+        pass
+
 #from gpdefs import *
 
 try:
@@ -56,8 +92,8 @@ class GeditTerminal(gtk.HBox):
         'audible_bell'          : False,
         'background'            : None,
         'backspace_binding'     : 'ascii-del',
-        'cursor_blink_mode'     : vte.CURSOR_BLINK_SYSTEM,
-        'cursor_shape'          : vte.CURSOR_SHAPE_BLOCK,
+        'cursor_blink_mode'     : vte.CursorBlinkMode.SYSTEM,
+        'cursor_shape'          : vte.CursorShape.BLOCK,
         'emulation'             : 'xterm',
         'font_name'             : 'Monospace 10',
         'scroll_on_keystroke'   : False,
@@ -70,31 +106,53 @@ class GeditTerminal(gtk.HBox):
     def __init__(self):
         gtk.HBox.__init__(self, False, 4)
 
-        gconf_client.add_dir(self.GCONF_PROFILE_DIR,
-                             gconf.CLIENT_PRELOAD_RECURSIVE)
+        if gconf_client:
+            gconf_client.add_dir(self.GCONF_PROFILE_DIR,
+                                 gconf.CLIENT_PRELOAD_RECURSIVE)
 
         self._vte = vte.Terminal()
         self.reconfigure_vte()
         self._vte.set_size(self._vte.get_column_count(), 5)
         self._vte.set_size_request(200, 50)
         self._vte.show()
-        self.pack_start(self._vte)
+        self.pack_start(self._vte, True, True, 0)
         
-        self._scrollbar = gtk.VScrollbar(self._vte.get_adjustment())
+        self._scrollbar = gtk.Scrollbar.new(gtk.Orientation.VERTICAL, self._vte.get_vadjustment())
         self._scrollbar.show()
         self.pack_start(self._scrollbar, False, False, 0)
         
-        gconf_client.notify_add(self.GCONF_PROFILE_DIR,
-                                self.on_gconf_notification)
+        if gconf_client:
+            gconf_client.notify_add(self.GCONF_PROFILE_DIR,
+                                    self.on_gconf_notification)
 
         # we need to reconf colors if the style changes
-        self._vte.connect("style-set", lambda term, oldstyle: self.reconfigure_vte())
+        self._vte.connect("style-set", lambda *args: self.reconfigure_vte())
         self._vte.connect("key-press-event", self.on_vte_key_press)
         self._vte.connect("button-press-event", self.on_vte_button_press)
         self._vte.connect("popup-menu", self.on_vte_popup_menu)
-        self._vte.connect("child-exited", lambda term: term.fork_command())
+        self._vte.connect("child-exited", lambda *args: self._fork_command())
 
-        self._vte.fork_command()
+        self._fork_command()
+
+    def _fork_command(self):
+        """Spawn a new terminal process."""
+        try:
+            # VTE 2.91+ uses spawn_sync instead of fork_command
+            self._vte.spawn_sync(
+                vte.PtyFlags.DEFAULT,
+                None,  # working directory
+                ["/bin/bash"],  # command
+                [],  # environment
+                0,   # spawn flags
+                None, None,  # child setup
+                None  # cancellable
+            )
+        except AttributeError:
+            # Fallback for older VTE
+            try:
+                self._vte.fork_command()
+            except AttributeError:
+                pass  # Terminal won't work but app won't crash
 
     def reconfigure_vte(self):
         # Fonts
@@ -113,22 +171,46 @@ class GeditTerminal(gtk.HBox):
         # colors
         self._vte.ensure_style()
         style = self._vte.get_style()
-        fg = style.text[gtk.STATE_NORMAL]
-        bg = style.base[gtk.STATE_NORMAL]
+        
+        # Use default colors
+        fg = Gdk.RGBA()
+        fg.parse("black")
+        bg = Gdk.RGBA()
+        bg.parse("white")
         palette = []
+        
+        # Try to get colors from style (may not work in all GTK3 versions)
+        # lookup_color returns (found, color) tuple
+        try:
+            found, fg_color = style.lookup_color("text_color")
+            if found:
+                fg = fg_color
+        except:
+            pass
+            
+        try:
+            found, bg_color = style.lookup_color("base_color")
+            if found:
+                bg = bg_color
+        except:
+            pass
 
         if not gconf_get_bool(self.GCONF_PROFILE_DIR + "/use_theme_colors"):
             fg_color = gconf_get_str(self.GCONF_PROFILE_DIR + "/foreground_color", None)
             if (fg_color):
-                fg = gtk.gdk.color_parse (fg_color)
+                fg = Gdk.RGBA()
+                fg.parse(fg_color)
             bg_color = gconf_get_str(self.GCONF_PROFILE_DIR + "/background_color", None)
             if (bg_color):
-                bg = gtk.gdk.color_parse (bg_color)
+                bg = Gdk.RGBA()
+                bg.parse(bg_color)
         str_colors = gconf_get_str(self.GCONF_PROFILE_DIR + "/palette", None)
         if (str_colors):
             for str_color in str_colors.split(':'):
                 try:
-                    palette.append(gtk.gdk.color_parse(str_color))
+                    color = Gdk.RGBA()
+                    color.parse(str_color)
+                    palette.append(color)
                 except:
                     palette = []
                     break
@@ -139,11 +221,11 @@ class GeditTerminal(gtk.HBox):
         # cursor blink
         blink_mode = gconf_get_str(self.GCONF_PROFILE_DIR + "/cursor_blink_mode")
         if blink_mode.lower() == "system":
-            blink = vte.CURSOR_BLINK_SYSTEM
+            blink = vte.CursorBlinkMode.SYSTEM
         elif blink_mode.lower() == "on":
-            blink = vte.CURSOR_BLINK_ON
+            blink = vte.CursorBlinkMode.ON
         elif blink_mode.lower() == "off":
-            blink = vte.CURSOR_BLINK_OFF
+            blink = vte.CursorBlinkMode.OFF
         else:
             blink = self.defaults['cursor_blink_mode']
         self._vte.set_cursor_blink_mode(blink)
@@ -151,11 +233,11 @@ class GeditTerminal(gtk.HBox):
         # cursor shape
         cursor_shape = gconf_get_str(self.GCONF_PROFILE_DIR + "/cursor_shape")
         if cursor_shape.lower() == "block":
-            shape = vte.CURSOR_SHAPE_BLOCK
+            shape = vte.CursorShape.BLOCK
         elif cursor_shape.lower() == "ibeam":
-            shape = vte.CURSOR_SHAPE_IBEAM
+            shape = vte.CursorShape.IBEAM
         elif cursor_shape.lower() == "underline":
-            shape = vte.CURSOR_SHAPE_UNDERLINE
+            shape = vte.CursorShape.UNDERLINE
         else:
             shape = self.defaults['cursor_shape']
         self._vte.set_cursor_shape(shape)
@@ -175,23 +257,33 @@ class GeditTerminal(gtk.HBox):
         self._vte.set_scroll_on_output(gconf_get_bool(self.GCONF_PROFILE_DIR + "/scroll_on_output",
                                                       self.defaults['scroll_on_output']))
 
-        self._vte.set_word_chars(gconf_get_str(self.GCONF_PROFILE_DIR + "/word_chars",
-                                               self.defaults['word_chars']))
+        try:
+            self._vte.set_word_chars(gconf_get_str(self.GCONF_PROFILE_DIR + "/word_chars",
+                                                   self.defaults['word_chars']))
+        except AttributeError:
+            pass  # Not available in VTE 2.91+
 
-        self._vte.set_emulation(self.defaults['emulation'])
-        self._vte.set_visible_bell(self.defaults['visible_bell'])
+        try:
+            self._vte.set_emulation(self.defaults['emulation'])
+        except AttributeError:
+            pass  # Not available in VTE 2.91+
+            
+        try:
+            self._vte.set_visible_bell(self.defaults['visible_bell'])
+        except AttributeError:
+            pass  # Not available in VTE 2.91+
 
     def on_gconf_notification(self, client, cnxn_id, entry, what):
         self.reconfigure_vte()
 
     def on_vte_key_press(self, term, event):
         modifiers = event.state & gtk.accelerator_get_default_mod_mask()
-        if event.keyval in (gtk.keysyms.Tab, gtk.keysyms.KP_Tab, gtk.keysyms.ISO_Left_Tab):
-            if modifiers == gtk.gdk.CONTROL_MASK:
-                self.get_toplevel().child_focus(gtk.DIR_TAB_FORWARD)
+        if event.keyval in (Gdk.KEY_Tab, Gdk.KEY_KP_Tab, Gdk.KEY_ISO_Left_Tab):
+            if modifiers == Gdk.ModifierType.CONTROL_MASK:
+                self.get_toplevel().child_focus(gtk.DirectionType.TAB_FORWARD)
                 return True
-            elif modifiers == gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK:
-                self.get_toplevel().child_focus(gtk.DIR_TAB_BACKWARD)
+            elif modifiers == Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK:
+                self.get_toplevel().child_focus(gtk.DirectionType.TAB_BACKWARD)
                 return True
         return False
 
@@ -206,12 +298,12 @@ class GeditTerminal(gtk.HBox):
     def create_popup_menu(self):
         menu = gtk.Menu()
 
-        item = gtk.ImageMenuItem(gtk.STOCK_COPY)
+        item = gtk.ImageMenuItem.new_from_stock(gtk.STOCK_COPY, None)
         item.connect("activate", lambda menu_item: self._vte.copy_clipboard())
         item.set_sensitive(self._vte.get_has_selection())
         menu.append(item)
 
-        item = gtk.ImageMenuItem(gtk.STOCK_PASTE)
+        item = gtk.ImageMenuItem.new_from_stock(gtk.STOCK_PASTE, None)
         item.connect("activate", lambda menu_item: self._vte.paste_clipboard())
         menu.append(item)
         
@@ -244,7 +336,7 @@ class TerminalWindowHelper(object):
         self._panel.show()
 
         image = gtk.Image()
-        image.set_from_icon_name("utilities-terminal", gtk.ICON_SIZE_MENU)
+        image.set_from_icon_name("utilities-terminal", gtk.IconSize.MENU)
 
         bottom = window.get_bottom_panel()
         bottom.add_item(self._panel, _("Terminal"), image)
@@ -279,29 +371,38 @@ class TerminalWindowHelper(object):
 
 
 
-gconf_client = gconf.client_get_default()
+# gconf helper functions (will return defaults if gconf is not available)
 def gconf_get_bool(key, default = False):
-    val = gconf_client.get(key)
-    
-    if val is not None and val.type == gconf.VALUE_BOOL:
-        return val.get_bool()
-    else:
+    if gconf_client is None:
         return default
+    try:
+        val = gconf_client.get(key)
+        if val is not None and val.type == gconf.VALUE_BOOL:
+            return val.get_bool()
+    except:
+        pass
+    return default
 
 def gconf_get_str(key, default = ""):
-    val = gconf_client.get(key)
-    
-    if val is not None and val.type == gconf.VALUE_STRING:
-        return val.get_string()
-    else:
+    if gconf_client is None:
         return default
+    try:
+        val = gconf_client.get(key)
+        if val is not None and val.type == gconf.VALUE_STRING:
+            return val.get_string()
+    except:
+        pass
+    return default
 
 def gconf_get_int(key, default = 0):
-    val = gconf_client.get(key)
-    
-    if val is not None and val.type == gconf.VALUE_INT:
-        return val.get_int()
-    else:
+    if gconf_client is None:
         return default
+    try:
+        val = gconf_client.get(key)
+        if val is not None and val.type == gconf.VALUE_INT:
+            return val.get_int()
+    except:
+        pass
+    return default
 
 

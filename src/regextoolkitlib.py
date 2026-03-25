@@ -58,8 +58,8 @@ def test():
     inp="Hello 99 World"
     m=match(pat, inp)
     if m:
-      print capture_groups(m)
-      print capture_named_groups(m)
+      print(capture_groups(m))
+      print(capture_named_groups(m))
 
 if __name__=="__main__":
     test()

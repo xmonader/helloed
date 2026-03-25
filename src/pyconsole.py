@@ -22,11 +22,12 @@
 # The use case is: you have a python program, you create this widget,
 # and inspect your program interiors.
 
-import gtk
-import gtk.gdk as gdk
-import gobject
-import pango
-import gtk.keysyms as keys
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
+from gi.repository import Gdk
+from gi.repository import GObject as gobject
+from gi.repository import Pango as pango
 import code
 import sys
 import keyword
@@ -67,7 +68,7 @@ class _ReadLine(object):
 
             if text != self.items[self.ptr]:
                 self.edited[self.ptr] = text
-            elif self.edited.has_key(self.ptr):
+            elif self.ptr in self.edited:
                 del self.edited[self.ptr]
 
             self.ptr = self.ptr + dir
@@ -84,7 +85,7 @@ class _ReadLine(object):
     def __init__(self):
         object.__init__(self)
 
-        self.set_wrap_mode(gtk.WRAP_CHAR)
+        self.set_wrap_mode(gtk.WrapMode.CHAR)
         self.modify_font(pango.FontDescription("Monospace"))
 
         self.buffer = self.get_buffer()
@@ -106,7 +107,7 @@ class _ReadLine(object):
         self.run_on_raw_input = None
         self.tab_pressed = 0
         self.history = _ReadLine.History()
-        self.nonword_re = re.compile("[^\w\._]")
+        self.nonword_re = re.compile(r"[^\w\._]")
 
     def freeze_undo(self):
         try: self.begin_not_undoable_action()
@@ -130,7 +131,7 @@ class _ReadLine(object):
             self.thaw_undo()
 
         self.__move_cursor_to(iter)
-        self.scroll_to_mark(self.cursor, 0.2)
+        self.scroll_to_mark(self.cursor, 0.2, False, 0.0, 0.0)
 
         self.in_raw_input = True
 
@@ -147,7 +148,7 @@ class _ReadLine(object):
         if iter.compare(self.__get_start()) >= 0 and \
            iter.compare(self.__get_end()) <= 0:
                 buffer.move_mark_by_name("cursor", iter)
-                self.scroll_to_mark(self.cursor, 0.2)
+                self.scroll_to_mark(self.cursor, 0.2, False, 0.0, 0.0)
 
     def __insert(self, iter, text):
         self.do_insert = True
@@ -212,33 +213,33 @@ class _ReadLine(object):
         self.tab_pressed = 0
         handled = True
 
-        state = event.state & (gdk.SHIFT_MASK |
-                                gdk.CONTROL_MASK |
-                                gdk.MOD1_MASK)
+        state = event.state & (Gdk.ModifierType.SHIFT_MASK |
+                                Gdk.ModifierType.CONTROL_MASK |
+                                Gdk.ModifierType.MOD1_MASK)
         keyval = event.keyval
 
         if not state:
-            if keyval == keys.Return:
+            if keyval == Gdk.KEY_Return:
                 self.__commit()
-            elif keyval == keys.Up:
+            elif keyval == Gdk.KEY_Up:
                 self.__history(-1)
-            elif keyval == keys.Down:
+            elif keyval == Gdk.KEY_Down:
                 self.__history(1)
-            elif keyval == keys.Left:
+            elif keyval == Gdk.KEY_Left:
                 self.__move_cursor(-1)
-            elif keyval == keys.Right:
+            elif keyval == Gdk.KEY_Right:
                 self.__move_cursor(1)
-            elif keyval == keys.Home:
+            elif keyval == Gdk.KEY_Home:
                 self.__move_cursor(-10000)
-            elif keyval == keys.End:
+            elif keyval == Gdk.KEY_End:
                 self.__move_cursor(10000)
-            elif keyval == keys.Tab:
+            elif keyval == Gdk.KEY_Tab:
                 self.tab_pressed = tab_pressed + 1
                 self.__complete()
             else:
                 handled = False
-        elif state == gdk.CONTROL_MASK:
-            if keyval == keys.u:
+        elif state == Gdk.ModifierType.CONTROL_MASK:
+            if keyval == Gdk.KEY_u:
                 start = self.__get_start()
                 end = self.__get_cursor()
                 self.__delete(start, end)
@@ -258,7 +259,7 @@ class _ReadLine(object):
         if not new_text is None:
             self.__replace_line(new_text)
         self.__move_cursor(0)
-        self.scroll_to_mark(self.cursor, 0.2)
+        self.scroll_to_mark(self.cursor, 0.2, False, 0.0, 0.0)
 
     def __get_cursor(self):
         return self.buffer.get_iter_at_mark(self.cursor)
@@ -305,7 +306,7 @@ class _ReadLine(object):
         self.__delete(iter, end)
 
     def __get_width(self):
-        if not (self.flags() & gtk.REALIZED):
+        if not self.get_realized():
             return 80
         layout = pango.Layout(self.get_pango_context())
         letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -325,14 +326,14 @@ class _ReadLine(object):
         n_columns = max(int(width / (max_width + 1)), 1)
         col_width = int(width / n_columns)
         total = len(completions)
-        col_length = total / n_columns
+        col_length = total // n_columns
         if total % n_columns:
             col_length = col_length + 1
         col_length = max(col_length, 1)
 
         if col_length == 1:
             n_columns = total
-            col_width = width / total
+            col_width = width // total
 
         for i in range(col_length):
             for j in range(n_columns):
@@ -348,7 +349,7 @@ class _ReadLine(object):
         self.__insert(iter, "%s%s%s" % (self.ps, line_start, line_end))
         iter.set_line_offset(len(self.ps) + len(line_start))
         self.__move_cursor_to(iter)
-        self.scroll_to_mark(self.cursor, 0.2)
+        self.scroll_to_mark(self.cursor, 0.2, False, 0.0, 0.0)
 
     def __complete(self):
         text = self.__get_text(self.__get_start(), self.__get_cursor())
@@ -493,7 +494,7 @@ class _Console(_ReadLine, code.InteractiveInterpreter):
                 for s in strings:
                     if s.startswith(end):
                         completions[s] = None
-                completions = completions.keys()
+                completions = list(completions.keys())
             else:
                 completions = strings
 
@@ -532,7 +533,7 @@ class _Console(_ReadLine, code.InteractiveInterpreter):
         except: pass
 
         try:
-            exec "import __builtin__" in self.locals
+            exec("import builtins", self.locals)
             strings.extend(eval("dir(__builtin__)", self.locals))
         except:
             pass
@@ -571,7 +572,7 @@ Console = ConsoleType()
 if __name__ == '__main__':
     window = gtk.Window()
     swin = gtk.ScrolledWindow()
-    swin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+    swin.set_policy(gtk.PolicyType.AUTOMATIC, gtk.PolicyType.ALWAYS)
     window.add(swin)
     swin.add(Console(banner="Hello there!",
                      use_rlcompleter=False,

@@ -1,4 +1,4 @@
-#!usr/bin/python
+#!/usr/bin/env python3
 
 #       regexlib.py
 #       
@@ -19,7 +19,7 @@
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
 
-import httplib
+import http.client as httplib
 from myhappymapper import get_root_string, find_all, find_one
 
 HOST="regexlib.com"
@@ -79,10 +79,10 @@ def create_listallasxml(maxrows):
 
 def get_details_of_regexp(id_):
     xml=create_getregexpdetails(id_)
-    print xml
-    print "*"*20
+    print(xml)
+    print("*"*20)
     root=get_root_string(xml)
-    print root.prettify()
+    print(root.prettify())
     regexpdetails=find_one("getRegExpDetailsResult", root)
     return regexpdetails
 
@@ -95,6 +95,6 @@ def get_expressions_of(keyword, regex_substring, min_rating, howmanyrows):
 if __name__=="__main__":
     expslist=get_expressions_of("Email", "", 5, 5)
     for exps in expslist:
-        print "*"*20
-        print exps.Pattern
+        print("*"*20)
+        print(exps.Pattern)
 

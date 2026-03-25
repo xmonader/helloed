@@ -1,0 +1,15 @@
+# Core dependencies for helloed text editor
+# Requires Python 3.8+
+# 
+# IMPORTANT: System GTK3 libraries must be installed first!
+# See README.md for system dependencies.
+
+# GTK3 bindings via GObject Introspection
+PyGObject>=3.30.0
+
+# XML processing
+lxml>=4.5.0
+
+# Note: gtksourceview is a system library installed via package manager
+# Ubuntu/Debian: gir1.2-gtksource-4
+# Fedora: gtksourceview4

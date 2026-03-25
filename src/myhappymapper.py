@@ -1,4 +1,4 @@
-#!usr/bin/python
+#!/usr/bin/env python3
 
 #       myhappymapper.py
 #       
@@ -33,12 +33,9 @@ from xml.sax import make_parser, parseString
 from xml.sax.handler import ContentHandler
 
 #htmlhandling
-try:
-    from HTMLParser import HTMLParser as HP 
-except ImportError:
-    import html.parser as HP
+from html.parser import HTMLParser as HP
 
-import urllib2 as ulib2
+import urllib.request as ulib2
 import sys, traceback 
 
 class Item(object):
@@ -154,16 +151,16 @@ class Tag(Item):
     #verbosity only usage...
     def print_attrs(self):
         """Prints attributes of Tag self"""
-        print "\t**Attrs: "
+        print("\t**Attrs: ")
         for name, value in self.iter_attrs():
-            print "\t", name, " => ", value
+            print("\t", name, " => ", value)
 
     def print_tags(self):
         """Prints inner tags of Tag self."""
-        print "\t**Tags: "
+        print("\t**Tags: ")
         for tag in self._innertags:
-            #print "\t", tag.itsname, " => ", tag.content
-            #print "\t", 
+            #print("\t", tag.itsname, " => ", tag.content)
+            #print("\t", 
             tag.inspect_all()
     
     def as_xml(self):
@@ -171,16 +168,16 @@ class Tag(Item):
                 
     def inspect_all(self):
         """Prints attrs and tags (an alias for print_attrs and print_tags)"""
-        print "****IN Tag: ", self.itsname
+        print("****IN Tag: ", self.itsname)
         if self.parent:
-            print "Parent: ", self.parent.itsname
+            print("Parent: ", self.parent.itsname)
         else:
-            print "Root tag."
+            print("Root tag.")
         self.print_attrs()
         self.print_tags()
-        print "\tNEXT Sib of %s: %s"%(self.itsname, self.nextSib)
-        print "\tPREV Sib of %s: %s"%(self.itsname, self.prevSib)
-        print "******ENDED: ", self.itsname
+        print("\tNEXT Sib of %s: %s"%(self.itsname, self.nextSib))
+        print("\tPREV Sib of %s: %s"%(self.itsname, self.prevSib))
+        print("******ENDED: ", self.itsname)
         
     def prettify(self, level=0): 
         txt=""
@@ -255,7 +252,7 @@ class HandlerMixIn(object):
             if self._stack:
                 popped.parent=self._stack[-1]
                 self._stack[-1].add_tag(popped)
-        except Exception, ex:
+        except Exception as ex:
             #index out of range, Don't bother.
             traceback.print_exc(file=sys.stdout)
 
@@ -342,7 +339,7 @@ def find_all(tagName, root):
 
 def find_one(tagName,root):
     try:
-        return find_all(tagName, root).next()
+        return next(find_all(tagName, root))
     except:
         return None
 
@@ -417,11 +414,11 @@ def simple_xml_test():
 """
     root=get_root_document(txt)
     root.inspect_all()
-    print root.prettify()
+    print(root.prettify())
     bookslist=list(book.name.content for book in find_all("book", root))
     total=sum(list(int(price.clean_content) for price in find_all("price", root)))
-    print "TOTAL: ", total
-    print bookslist
+    print("TOTAL: ", total)
+    print(bookslist)
 
 def simple_html_text():
     #
@@ -445,12 +442,12 @@ def simple_html_text():
     root=get_root_string(txt, False)
     #root.inspect_all()
     links=list([ a.href for a in find_all('a', root) ])
-    print links
+    print(links)
     
 if __name__=="__main__":
 
     try:
         simple_xml_test()
         #simple_html_text()
-    except Exception, ex:
+    except Exception as ex:
         traceback.print_exc(file=sys.stdout)
