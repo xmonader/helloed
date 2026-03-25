@@ -266,6 +266,7 @@ class MainWindow(Gtk.Window, EventMixin):
     # Signal handlers
     def _on_new(self, widget) -> None:
         """Handle new document request."""
+        logger.debug("New document requested")
         doc = Document()
         self.open_document(doc)
     

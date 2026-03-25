@@ -43,6 +43,8 @@ class EditorView(Gtk.Box):
         self._view = GtkSource.View.new_with_buffer(self._buffer)
         
         # Configure view
+        self._view.set_editable(True)
+        self._view.set_can_focus(True)
         self._view.set_show_line_numbers(True)
         self._view.set_highlight_current_line(True)
         self._view.set_auto_indent(True)

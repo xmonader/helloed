@@ -157,10 +157,14 @@ class Application(GObject.GObject, EventMixin):
         window.show_all()
         window.present()
         
+        # Debug widget states
+        logger.debug("Window visible: %s, sensitive: %s", 
+                    window.get_visible(), window.get_sensitive())
+        
         self._active_window = window
         self.emit('window-created', window)
         
-        logger.debug("Created new window")
+        logger.debug("Created new window with %d widgets", len(window.get_children()))
         return window
     
     def close_window(self, window: Gtk.Window) -> None:
